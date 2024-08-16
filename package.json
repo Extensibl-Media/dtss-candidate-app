@@ -44,7 +44,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@aws-sdk/client-ses": "^3.470.0",
+		"@aws-sdk/client-ses": "^3.632.0",
 		"@axiomhq/js": "^1.0.0-rc.1",
 		"@internationalized/date": "^3.5.0",
 		"@lucia-auth/adapter-drizzle": "^1.0.2",
