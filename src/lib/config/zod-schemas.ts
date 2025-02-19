@@ -26,7 +26,7 @@ export const userSchema = z.object({
 		.default('USER'),
 	verified: z.boolean().default(false),
 	terms: z.literal<boolean>(true, {
-		errorMap: () => ({ message: "You must accept the terms & privacy policy" }),
+		errorMap: () => ({ message: 'You must accept the terms & privacy policy' })
 	}),
 	token: z.string().optional(),
 	receiveEmail: z.boolean().default(true),
@@ -53,4 +53,16 @@ export const userUpdatePasswordSchema = userSchema
 		}
 	});
 
-	export type UserUpdatePasswordSchema = typeof userUpdatePasswordSchema;
+export type UserUpdatePasswordSchema = typeof userUpdatePasswordSchema;
+
+export const requisitionApplicationSchema = z.object({
+	requisitionId: z.number()
+});
+
+export type RequisitionApplicationSchema = typeof requisitionApplicationSchema;
+
+export const recurrenceDayClaimSchema = z.object({
+	recurrenceDayId: z.string().uuid()
+});
+
+export type RecurrenceDayClaimSchema = typeof recurrenceDayClaimSchema;
