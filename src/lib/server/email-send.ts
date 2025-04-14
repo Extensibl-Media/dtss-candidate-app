@@ -1,38 +1,29 @@
 import nodemailer from 'nodemailer';
-import * as aws from '@aws-sdk/client-ses';
-import {
-	FROM_EMAIL,
-	AWS_ACCESS_KEY_ID,
-	AWS_SECRET_ACCESS_KEY,
-	AWS_REGION,
-	AWS_API_VERSION
-} from '$env/static/private';
+import { FROM_EMAIL } from '$env/static/private';
 //import { z } from "zod";
+
+const devSMPTSettings = {
+	host: 'sandbox.smtp.mailtrap.io',
+	port: 2525,
+	auth: {
+		user: 'b43aac2777b9e1',
+		pass: '46f23bd89883f8'
+	}
+};
+
 export default async function sendEmail(
 	email: string,
 	subject: string,
 	bodyHtml?: string,
 	bodyText?: string
 ) {
-	const hasAccessKeys = AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY;
+	// Dev SMTP Mock Server
 
-	const ses = new aws.SES({
-		apiVersion: AWS_API_VERSION,
-		region: AWS_REGION,
-		...(hasAccessKeys
-			? {
-					credentials: {
-						accessKeyId: AWS_ACCESS_KEY_ID || '',
-						secretAccessKey: AWS_SECRET_ACCESS_KEY || ''
-					}
-				}
-			: {})
-	});
+	// TODO: Set up prod mail settings with Nodemailer
 
-	// create Nodemailer SES transporter
-	const transporter = nodemailer.createTransport({
-		SES: { ses, aws }
-	});
+	// Set up nodemailer transport
+	const transporter = nodemailer.createTransport(devSMPTSettings);
+	console.log({ transporter });
 
 	try {
 		if (!bodyText) {
