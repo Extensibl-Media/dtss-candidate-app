@@ -1,11 +1,11 @@
 import { generateToken } from '$lib/server/utils';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import type { RequestEvent } from './$types';
+import type { PageServerLoad, RequestEvent } from './$types';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { recurrenceDayClaimSchema } from '$lib/config/zod-schemas';
 
-export const load = async ({ locals, setHeaders }) => {
+export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 	setHeaders({
 		'cache-control': 'max-age=60'
 	});
@@ -14,6 +14,10 @@ export const load = async ({ locals, setHeaders }) => {
 
 	if (!user) {
 		return redirect(303, '/sign-in');
+	}
+
+	if (!user.completedOnboarding) {
+		redirect(302, '/onboarding');
 	}
 
 	const userId = user.id;
@@ -45,7 +49,7 @@ export const load = async ({ locals, setHeaders }) => {
 			if (profileReq.status === 401) {
 				throw error(401, 'Authentication failed');
 			}
-			throw error(profileReq.status, 'Failed to fetch requisitions');
+			throw error(profileReq.status, 'Failed to fetch profile');
 		}
 
 		const profile = await profileReq.json();

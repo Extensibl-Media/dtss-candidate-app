@@ -7,7 +7,12 @@
 	$: conversations = data.conversations
 	$: console.log(conversations)
 </script>
-<section  class="container flex flex-col gap-6 pb-16 max-w-2xl">
+
+<svelte:head>
+  <title>Inbox | DentalStaff.US</title>
+</svelte:head>
+
+<section  class="container flex flex-col gap-6 pb-16 max-w-2xl px-4">
     <h1 class="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
 		Inbox
 	</h1>
@@ -21,7 +26,7 @@
             {#each conversations as conversation}
                 {#if conversation.type === "APPLICATION"}
                     <a href={`/inbox/${conversation.id}`}>
-                        <div class="hover:bg-gray-100 p-4 flex items-center justify-between gap-8 cursor-pointer">
+                        <div class="hover:bg-gray-100 py-4 flex items-center justify-between gap-8 cursor-pointer">
                             <div class="grow w-full">
                                 <p class="font-semibold">{conversation.applicationData.requisition.title}</p>
                                 <p class="text-sm">{conversation.applicationData.company.name}</p>

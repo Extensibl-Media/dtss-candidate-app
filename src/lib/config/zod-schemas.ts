@@ -1,5 +1,18 @@
 import { z } from 'zod';
 
+export type Primitive = string | number | boolean | null;
+
+export type JsonType = Primitive | { [key: PropertyKey]: JsonType } | JsonType[];
+
+export const zJsonString = z.string().transform((str, ctx): JsonType => {
+	try {
+		return JSON.parse(str);
+	} catch (e) {
+		ctx.addIssue({ code: 'custom', message: 'Invalid JSON' });
+		return z.NEVER;
+	}
+});
+
 export const userSchema = z.object({
 	firstName: z
 		.string({ required_error: 'First Name is required' })
@@ -66,3 +79,67 @@ export const recurrenceDayClaimSchema = z.object({
 });
 
 export type RecurrenceDayClaimSchema = typeof recurrenceDayClaimSchema;
+
+export const newProfileSchema = z.object({
+	address: z.string().optional(),
+	hourlyRateMin: z.number(),
+	hourlyRateMax: z.number(),
+	city: z.string().optional(),
+	state: z.string().optional(),
+	zipcode: z.string().optional(),
+	cellPhone: z.string().optional(),
+	citizenship: z.string().optional(),
+	birthday: z.string().optional(),
+	regionId: z.string().optional()
+});
+export type NewProfileSchema = typeof newProfileSchema;
+
+export const updateProfileSchema = z.object({
+	firstName: z.string(),
+	lastName: z.string(),
+	email: z.string().email(),
+	address: z.string().optional(),
+	hourlyRateMin: z.number(),
+	hourlyRateMax: z.number(),
+	city: z.string().optional(),
+	state: z.string().optional(),
+	zipcode: z.string().optional(),
+	cellPhone: z.string().optional(),
+	citizenship: z.string().optional(),
+	birthday: z.string().optional(),
+	regionId: z.string().optional()
+});
+export type UpdateProfileSchema = typeof newProfileSchema;
+
+export const newCandidateDisciplinesSchema = z.object({
+	disciplines: z.array(z.object({ disciplineId: z.string(), experienceLevelId: z.string() }))
+});
+export type NewCandidateDisciplinesSchema = typeof newCandidateDisciplinesSchema;
+
+export const fileUploadSchema = z.object({
+	file: z.instanceof(File).refine((f) => f.size < 2 * 1024 * 1024, 'Max 2MB upload size.')
+});
+
+export type FileUploadSchema = typeof fileUploadSchema;
+
+export const multiFileUploadSchema = z.object({
+	files: z
+		.instanceof(File)
+		.refine((f) => f.size < 2 * 1024 * 1024, 'Max 2MB upload size.')
+		.array()
+});
+
+export type MultiFileUploadSchema = typeof multiFileUploadSchema;
+
+export const avatarUrlSchema = z.object({ url: z.string() });
+
+export type AvatarUrlSchema = typeof avatarUrlSchema;
+
+export const documentUrlSchema = z.object({
+	type: z.enum(['RESUME', 'LICENSE', 'CERTIFICATE', 'OTHER']).optional(),
+	filename: z.string().optional(),
+	url: z.string().optional(),
+	urls: z.array(z.string()).optional(),
+	createdAt: z.date().optional(),
+	filesData: zJsonString.optional()
+});

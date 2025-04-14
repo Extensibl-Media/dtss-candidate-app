@@ -18,6 +18,10 @@
 	export let form: SuperValidated<SignInSchema>;
 </script>
 
+<svelte:head>
+  <title>Sign In | DentalStaff.US</title>
+</svelte:head>
+
 <div class="flex items-center justify-center mx-auto max-w-2xl">
 	<Form.Root let:submitting let:errors method="POST" {form} schema={signInSchema} let:config>
 		<Card.Root>

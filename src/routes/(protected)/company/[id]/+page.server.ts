@@ -1,8 +1,18 @@
 import type { PageServerLoad } from './$types';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
-export const load: PageServerLoad = async ({ fetch, params }) => {
+export const load: PageServerLoad = async ({ fetch, params, locals }) => {
+	const user = locals.user;
+
+	if (!user) {
+		redirect(302, '/auth/sign-in');
+	}
+
+	if (!user.completedOnboarding) {
+		redirect(302, '/onboarding');
+	}
+
 	const { id } = params;
 
 	try {

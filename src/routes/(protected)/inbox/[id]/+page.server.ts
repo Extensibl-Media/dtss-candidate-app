@@ -1,15 +1,14 @@
 import type { PageServerLoad } from './$types';
-import { error, fail, redirect, type Actions, type RequestEvent } from '@sveltejs/kit';
+import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { generateToken } from '$lib/server/utils';
-import { message, setError, superValidate } from 'sveltekit-superforms/server';
+import { superValidate } from 'sveltekit-superforms/server';
 import { z } from 'zod';
 
 const messageSchema = z.object({
 	body: z.string().min(1, 'Message cannot be empty'),
 	isSystemMessage: z.boolean().default(false)
 });
-
 
 export const load: PageServerLoad = async (event) => {
 	const { id } = event.params;
@@ -69,22 +68,23 @@ export const actions = {
 		if (!form.valid) {
 			return fail(400, { form });
 		}
-
+		console.log({ finalData: form.data });
 		try {
-			const response = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/inbox/sendMessage/${event.params.id}`,
+			const response = await fetch(
+				`${env.CLIENT_APP_DOMAIN}/api/external/inbox/sendMessage/${event.params.id}`,
 				{
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${token}`
-
 					},
 					body: JSON.stringify({
 						senderId: event?.locals?.user?.id,
 						body: form.data.body,
-						isSystemMessage: form.data.isSystemMessage,
+						isSystemMessage: form.data.isSystemMessage
 					})
-				});
+				}
+			);
 
 			if (!response.ok) {
 				const error = await response.json();
@@ -98,7 +98,6 @@ export const actions = {
 			form.data.body = '';
 
 			return { form, success: true };
-
 		} catch (error) {
 			console.error('Error sending message:', error);
 			return fail(500, {

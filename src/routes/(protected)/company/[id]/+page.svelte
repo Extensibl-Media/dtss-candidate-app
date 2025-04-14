@@ -9,6 +9,11 @@
 	$: requisitions = data.requisitions
 
 </script>
+
+<svelte:head>
+  <title>{company.companyName} | DentalStaff.US</title>
+</svelte:head>
+
 <section class="container flex flex-col gap-6 pb-16 max-w-5xl">
     <div class="flex justify-between w-full">
         <div class="space-y-4">

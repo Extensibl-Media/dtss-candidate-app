@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { generateToken } from '$lib/server/utils';
 
@@ -8,14 +8,18 @@ export const load: PageServerLoad = async ({ fetch, locals, setHeaders }) => {
 		'cache-control': 'max-age=60'
 	});
 	// Assuming you have the user's ID in the session
-	const userId = locals.user?.id;
+	const user = locals.user;
 
-	if (!userId) {
-		throw error(401, 'Not authenticated');
+	if (!user) {
+		redirect(302, '/auth/sign-in');
+	}
+
+	if (!user.completedOnboarding) {
+		redirect(302, '/onboarding');
 	}
 
 	// Generate a token for this request
-	const token = generateToken(userId);
+	const token = generateToken(user.id);
 
 	try {
 		const requisitionRes = await fetch(

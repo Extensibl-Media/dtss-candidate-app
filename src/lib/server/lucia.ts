@@ -4,8 +4,8 @@ import { DrizzlePostgreSQLAdapter } from '@lucia-auth/adapter-drizzle';
 import { userTable, sessionTable } from '$lib/server/database/drizzle-schemas';
 import db from '$lib/server/database/drizzle';
 import { dev } from '$app/environment';
-import { Google } from 'arctic';
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
+// import { Google } from 'arctic';
+// import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
 
 import { BASE_URL } from '$lib/config/constants';
 
@@ -22,16 +22,20 @@ export const lucia = new Lucia(adapter, {
 	sessionExpiresIn: new TimeSpan(30, 'd'), // no more active/idle
 	getUserAttributes: (attributes) => {
 		return {
-			userId: attributes.id,
+			id: attributes.id,
 			provider: attributes.provider,
 			providerId: attributes.providerId,
 			email: attributes.email,
 			firstName: attributes.firstName,
 			lastName: attributes.lastName,
+			avatarUrl: attributes.avatarUrl,
 			role: attributes.role,
 			verified: attributes.verified,
 			receiveEmail: attributes.receiveEmail,
-			token: attributes.token
+			token: attributes.token,
+			completedOnboarding: attributes.completedOnboarding,
+			onboardingStep: attributes.onboardingStep,
+			blacklisted: attributes.blacklisted
 		};
 	}
 });
@@ -51,18 +55,22 @@ interface DatabaseUserAttributes {
 	email: string;
 	firstName: string;
 	lastName: string;
+	avatarUrl: string | null;
 	role: string;
 	verified: boolean;
 	receiveEmail: boolean;
 	token: string;
+	completedOnboarding: boolean;
+	onboardingStep: number;
+	blacklisted: boolean;
 }
 
 /*interface DatabaseSessionAttributes {
 	sessionExpiresIn: number;
 }*/
 
-const googleRedirectUrl = dev
-	? 'http://localhost:5173/auth/oauth/google/callback'
-	: `${BASE_URL}/auth/oauth/google/callback`;
+// const googleRedirectUrl = dev
+// 	? 'http://localhost:5173/auth/oauth/google/callback'
+// 	: `${BASE_URL}/auth/oauth/google/callback`;
 
-export const googleOauth = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, googleRedirectUrl);
+// export const googleOauth = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, googleRedirectUrl);

@@ -6,11 +6,17 @@
 		UserRound,
 		LogOut,
 		Menu,
-		PieChart,
+		Home,
 		CalendarSearch,
 		Briefcase,
 		CalendarClock,
-		MessageCircle
+		MessageCircle,
+		Cog,
+		ChevronRight,
+
+		Building
+
+
 	} from 'lucide-svelte';
 	import { APP_NAME } from '$lib/config/constants';
 	import Logo from '$lib/components/logo/logo.svelte';
@@ -30,7 +36,7 @@
 	export let user: any;
 	let hidden = true;
 	let transitionParams = {
-		x: -320,
+		x: -400,
 		duration: 200,
 		easing: sineIn
 	};
@@ -51,6 +57,7 @@
 			initials = convertNameToInitials(user.firstName, user.lastName);
 		}
 	}
+
 </script>
 
 <header class="sticky top-0 z-40 w-full border-b bg-blue-900">
@@ -63,8 +70,18 @@
 			{#if user}
 			<a
 				class="flex items-center text-sm font-medium text-white"
-				href="/temporary"
-				class:active={'/temporary' === activeUrl}>Temporary</a
+				href="/dashboard"
+				class:active={'/dashboard' === activeUrl}>Dashboard</a
+			>
+			<a
+				class="flex items-center text-sm font-medium text-white"
+				href="/calendar"
+				class:active={'/calendar' === activeUrl}>Calendar</a
+			>
+			<a
+				class="flex items-center text-sm font-medium text-white"
+				href="/my-shifts"
+				class:active={'/my-shifts' === activeUrl}>My Shifts</a
 			>
 			<a
 				class="flex items-center text-sm font-medium text-white"
@@ -114,6 +131,7 @@
 						<DropdownMenu.Trigger asChild let:builder>
 							<Button variant="ghost" builders={[builder]} class="relative h-8 w-8 rounded-full">
 								<Avatar.Root class="h-8 w-8">
+								    <Avatar.Image src={user.avatarUrl}/>
 									<Avatar.Fallback>{initials}</Avatar.Fallback>
 								</Avatar.Root>
 							</Button>
@@ -126,18 +144,14 @@
 								</div>
 							</DropdownMenu.Label>
 							<DropdownMenu.Separator />
-							<DropdownMenu.Group>
-								<DropdownMenu.Item on:click={() => goto('/profile')}>
-									<UserRound class="mr-2 h-4 w-4" />
-									Profile
-									<DropdownMenu.Shortcut>⇧⌘P</DropdownMenu.Shortcut>
+								<DropdownMenu.Item on:click={() => goto('/settings')}>
+									<Cog class="mr-2 h-4 w-4" />
+									Settings
 								</DropdownMenu.Item>
-							</DropdownMenu.Group>
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item on:click={signOut}>
 								<LogOut class="mr-2 h-4 w-4" />
 								Sign out
-								<DropdownMenu.Shortcut>⇧⌘Q</DropdownMenu.Shortcut>
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
@@ -153,7 +167,7 @@
 					<Menu class="h-[1.2rem] w-[1.2rem]" color="white" />
 				</Button>
 				<Drawer
-					class="bg-blue-900 -left-2"
+					class="bg-blue-900 -left-2 flex flex-col w-full max-w-[400px]"
 					transitionType="fly"
 					{transitionParams}
 					bind:hidden
@@ -170,39 +184,66 @@
 						activeClass="flex items-center p-2 text-base font-normal text-white bg-blue-800 rounded-lg hover:bg-blue-800"
 						nonActiveClass="flex items-center p-2 text-base font-normal text-white bg-blue-900 rounded-lg hover:bg-blue-800"
 					>
-						<SidebarWrapper class="bg-blue-900">
-							<SidebarGroup>
-								<SidebarItem on:click={() => (hidden = true)} label="Temporary" href="/temporary">
+						<SidebarWrapper class="bg-blue-900 flex flex-col gap-2 items-stretch">
+							<SidebarGroup class="flex-1">
+								<SidebarItem on:click={() => (hidden = true)} label="Dashboard" href="/dashboard">
 									<svelte:fragment slot="icon">
-										<CalendarSearch
-											class="w-6 h-6 text-white transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+										<Home
+											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
-								<SidebarItem on:click={() => (hidden = true)} label="Permanent" href="/permanent">
+								<SidebarItem on:click={() => (hidden = true)} label="Calendar" href="/calendar">
+									<svelte:fragment slot="icon">
+										<CalendarSearch
+											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
+										/>
+									</svelte:fragment>
+								</SidebarItem>
+								<SidebarItem on:click={() => (hidden = true)} label="My Shifts" href="/my-shifts">
+									<svelte:fragment slot="icon">
+										<Building
+											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
+										/>
+									</svelte:fragment>
+								</SidebarItem>
+								<SidebarItem on:click={() => (hidden = true)} label="Job Listings" href="/permanent">
 									<svelte:fragment slot="icon">
 										<Briefcase
-											class="w-6 h-6 text-white transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 								<SidebarItem on:click={() => (hidden = true)} label="Timesheets" href="/timesheets">
 									<svelte:fragment slot="icon">
 										<CalendarClock
-											class="w-6 h-6 text-white transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 								<SidebarItem on:click={() => (hidden = true)} label="Inbox" href="/inbox">
 									<svelte:fragment slot="icon">
 										<MessageCircle
-											class="w-6 h-6 text-white transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 							</SidebarGroup>
 						</SidebarWrapper>
 					</Sidebar>
+					<a href="/settings" class="mt-auto">
+    					<div class="flex gap-4 items-center">
+           					<Avatar.Root class="h-12 w-12">
+           					    <Avatar.Image src={user.avatarUrl}/>
+          						<Avatar.Fallback>{initials}</Avatar.Fallback>
+           					</Avatar.Root>
+                            <div class="space-y-2 text-white">
+                                <p class="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</p>
+                                <p class="text-xs leading-none text-gray-200">{user?.email}</p>
+                            </div>
+                            <ChevronRight class="text-white shrink-0" size={24}/>
+    					</div>
+					</a>
 				</Drawer>
 			</nav>
 		</div>

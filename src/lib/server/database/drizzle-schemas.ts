@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
 
 export const userTable = pgTable('users', {
 	id: text('id').notNull().primaryKey(),
@@ -7,7 +7,8 @@ export const userTable = pgTable('users', {
 	email: text('email').notNull().unique(),
 	firstName: text('first_name').notNull(),
 	lastName: text('last_name').notNull(),
-	role: text('role').notNull().default('USER'),
+	avatarUrl: text('avatar_url'),
+	role: text('role').notNull().default('CANDIDATE'),
 	verified: boolean('verified').notNull().default(false),
 	receiveEmail: boolean('receive_email').notNull().default(true),
 	password: text('password'),
@@ -19,7 +20,11 @@ export const userTable = pgTable('users', {
 	updatedAt: timestamp('updated_at', {
 		withTimezone: true,
 		mode: 'date'
-	}).notNull()
+	}).notNull(),
+	completedOnboarding: boolean('completed_onboarding').default(false),
+	onboardingStep: integer('onboarding_step').default(1),
+	blacklisted: boolean('blacklisted').default(false),
+	stripeCustomerId: text('stripe-_customer_id').unique()
 });
 
 export const sessionTable = pgTable('sessions', {

@@ -2,13 +2,18 @@ import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { generateToken } from '$lib/server/utils';
+import { redirect } from 'sveltekit-flash-message/server';
 
 export const load: PageServerLoad = async ({ fetch, locals }) => {
 	const { user } = locals;
 	const userId = user?.id;
 
 	if (!userId) {
-		throw error(401, 'Not authenticated');
+		redirect(301, '/auth/sign-in');
+	}
+
+	if (!user.completedOnboarding) {
+		redirect(302, '/onboarding');
 	}
 
 	// Generate a token for this request

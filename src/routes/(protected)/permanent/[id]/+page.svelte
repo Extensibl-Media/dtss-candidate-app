@@ -17,7 +17,11 @@
 
 </script>
 
-<section class="container flex flex-col gap-6 pb-16 max-w-5xl">
+<svelte:head>
+  <title>{opening.title} | DentalStaff.US</title>
+</svelte:head>
+
+<section class="container flex flex-col gap-6 pb-16 max-w-5xl px-4">
     <div class="flex justify-between w-full">
         <div class="space-y-4">
             <img class="h-12 w-12 md:h-20 md:w-20 rounded-sm" alt="Company Logo" src={opening.company.companyLogo}/>

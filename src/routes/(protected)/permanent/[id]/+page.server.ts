@@ -8,13 +8,17 @@ import { requisitionApplicationSchema } from '$lib/config/zod-schemas';
 
 export const load: PageServerLoad = async (event) => {
 	const { id } = event.params;
-	const userId = event.locals.user?.id;
+	const user = event.locals.user;
 
-	if (!userId) {
+	if (!user) {
 		redirect(302, '/sign-in');
 	}
 
-	const token = generateToken(userId);
+	const token = generateToken(user.id);
+
+	if (!user.completedOnboarding) {
+		redirect(302, '/onboarding');
+	}
 
 	try {
 		const response = await fetch(
@@ -32,7 +36,7 @@ export const load: PageServerLoad = async (event) => {
 		}
 
 		const requisition = await response.json();
-		const savedOpenings = await getSavedJobs(userId, token);
+		const savedOpenings = await getSavedJobs(user.id, token);
 		const appliedReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getAppliedRequisitions`, {
 			headers: {
 				Authorization: `Bearer ${token}`

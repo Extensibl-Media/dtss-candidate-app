@@ -4,7 +4,7 @@ import flowbitePlugin from 'flowbite/plugin'
 /** @type {import('tailwindcss').Config} */
 const config = {
 	content: ["./src/**/*.{html,js,svelte,ts}", './node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}'],
-  safelist: ["dark"],
+
 	plugins: [flowbitePlugin],
 	theme: {
 		container: {

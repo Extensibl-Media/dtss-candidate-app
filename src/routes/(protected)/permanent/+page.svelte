@@ -10,7 +10,11 @@
 	$: console.log({ requisitions, applied });
 </script>
 
-<section class="container grid items-center gap-6">
+<svelte:head>
+  <title>Permanent Jobs | DentalStaff.US</title>
+</svelte:head>
+
+<section class="container grid items-center gap-6 px-4">
 	<h1 class="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
 		Permanent Positions
 	</h1>

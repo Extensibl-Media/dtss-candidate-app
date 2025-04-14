@@ -17,6 +17,7 @@
     import type { SuperValidated } from 'sveltekit-superforms';
 	import type { RecurrenceDayClaimSchema } from '$lib/config/zod-schemas.js';
 	import { superForm } from 'sveltekit-superforms/client';
+	import { isPast } from 'date-fns';
 
 	type FilterType = 'ALL' | 'OPEN' | 'APPLIED';
 	export let data: PageData;
@@ -59,15 +60,20 @@
 		mounted = true;
 	});
 
-	$: console.log({calendarEvents, filter})
-
   export let applyForm: SuperValidated<RecurrenceDayClaimSchema>;
-  const { enhance, message, errors, submitting } = superForm(applyForm, {onResult: ({result}) => {
+  const { enhance, submitting } = superForm(applyForm, {onResult: ({result}) => {
     console.log(result)
+    if(result.type === 'success'){
+      dialogOpen = false;
+    }
   }});
 </script>
 
-<section class="container grid items-center gap-6">
+<svelte:head>
+  <title>Temp Shift Calendar | DentalStaff.US</title>
+</svelte:head>
+
+<section class="container grid items-center gap-6 px-4">
 	<div class="flex flex-col md:flex-row gap-4 justify-between">
 		<h1 class="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
 			Temporary Positions
@@ -177,9 +183,12 @@
                     <Button
                         class="bg-blue-800 hover:bg-blue-900"
                         type="submit"
-                        disabled={selectedEvent.extendedProps.recurrenceDay.status !== 'OPEN' || $submitting}>
+                        disabled={selectedEvent.extendedProps.recurrenceDay.status !== 'OPEN' || $submitting || isPast(selectedEvent.end)}>
                         {#if $submitting}
                             Claiming...
+                        {:else if isPast(selectedEvent.end)}
+                            Unable to claim
+
                         {:else}
                             {selectedEvent.extendedProps.recurrenceDay.status === 'OPEN'
                                 ? 'Claim Shift'

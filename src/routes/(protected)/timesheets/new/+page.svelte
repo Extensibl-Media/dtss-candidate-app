@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import * as Select from '$lib/components/ui/select';
-	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { Building, Building2, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	// import type { WorkdaysResponse, Company, Workday } from './types';
 	import { onMount } from 'svelte';
-	import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+	import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, eachDayOfInterval, getDay } from 'date-fns';
 	import type { PageData } from './$types';
 	import type { Selected } from 'bits-ui';
+	import { superForm } from 'sveltekit-superforms/client';
+	import { invalidateAll } from '$app/navigation';
 
 	type CompanySelect = {
 		id: string;
@@ -15,21 +17,55 @@
 	};
 
 	export let data: PageData;
-	$: ({ companies, workdays, user, profile, timesheets } = data);
 	let currentWeek = new Date();
 	let weekDays: Date[] = [];
-	let timeEntries: Record<string, { startTime: string; endTime: string; hours: number }> = {};
+	let timeEntries: Record<string, { startTime: string; endTime: string; hours: number, workdayId: string }> = {};
 	let selectedCompany: CompanySelect | undefined = undefined;
 
+	$: console.log(data)
+	$: ({ companies, workdays, timesheets } = data);
 	$: totalHours = Object.values(timeEntries).reduce((sum, entry) => sum + (entry.hours || 0), 0);
-
+	$: weekOfDate = startOfWeek(currentWeek)
 	$: weekLabel = `Week of ${format(startOfWeek(currentWeek), 'MMM d, yyyy')}`;
-
 	$: {
-		const start = startOfWeek(currentWeek);
+		const start = weekOfDate;
 		const end = endOfWeek(currentWeek);
 		weekDays = eachDayOfInterval({ start, end });
 	}
+	$: currentWeekWorkdays = getWorkdaysForWeek(currentWeek);
+	$: hasWorkdaysThisWeek = currentWeekWorkdays.length > 0;
+	$: existingTimesheet = hasExistingTimesheet(currentWeek);
+	// $: isWeekValid = hasWorkdaysThisWeek && !existingTimesheet;
+	$: console.log({ companies, workdays, selectedCompany, timesheets, weekDays });
+	$: {
+		const timesheetData = {
+			company: selectedCompany,
+			weekOf: weekOfDate,
+			entries: Object.entries(timeEntries).map(([date, entry]) => ({
+				date,
+				...entry
+			})),
+			totalHours
+		};
+
+		console.log('Timesheet Submission Data:', JSON.stringify(timesheetData, null, 2));
+	}
+	$: workdaysForCurrentWeek = getWorkdaysForCurrentWeek({workdays, weekDays, selectedCompany});
+	$: console.log({workdaysForCurrentWeek})
+	$: jsonTimeEntries = JSON.stringify(Object.entries(timeEntries).map(([date, entry]) => ({
+		date,
+		...entry
+	})));
+
+    const submitForm = data.form
+    const {form: formData, errors, submitting, enhance}  = superForm(submitForm, {
+      onResult: async ({result}) => {
+        if (result.type === 'success') {
+          // Handle success
+          await invalidateAll()
+        }
+      },
+    })
 
 	function calculateHours(startTime: string, endTime: string): number {
 		if (!startTime || !endTime) return 0;
@@ -40,10 +76,12 @@
 	}
 
 	function handleTimeChange(date: Date, type: 'startTime' | 'endTime', value: string) {
+	    console.log({date, type, value})
 		const dateKey = format(date, 'yyyy-MM-dd');
 		timeEntries[dateKey] = {
 			...timeEntries[dateKey],
 			[type]: value,
+			workdayId: workdays.find((workday) => workday.date === dateKey)?.id,
 			hours: calculateHours(
 				type === 'startTime' ? value : timeEntries[dateKey]?.startTime || '',
 				type === 'endTime' ? value : timeEntries[dateKey]?.endTime || ''
@@ -70,39 +108,16 @@
 
 	function nextWeek() {
 		const nextDate = addWeeks(currentWeek, 1);
-		if (nextDate <= new Date() && !hasExistingTimesheet(nextDate)) {
+		if (nextDate <= new Date()) {
 			currentWeek = nextDate;
 		}
 	}
 
 	function prevWeek() {
 		const prevDate = subWeeks(currentWeek, 1);
-		if (!hasExistingTimesheet(prevDate)) {
+		// if (!hasExistingTimesheet(prevDate)) {
 			currentWeek = prevDate;
-		}
-	}
-
-	$: currentWeekWorkdays = getWorkdaysForWeek(currentWeek);
-	$: hasWorkdaysThisWeek = currentWeekWorkdays.length > 0;
-	$: existingTimesheet = hasExistingTimesheet(currentWeek);
-	$: isWeekValid = hasWorkdaysThisWeek && !existingTimesheet;
-
-	async function handleSubmit() {
-		if (!isWeekValid) {
-			return;
-		}
-		const timesheetData = {
-			company: selectedCompany,
-			weekOf: format(startOfWeek(currentWeek), 'yyyy-MM-dd'),
-			entries: Object.entries(timeEntries).map(([date, entry]) => ({
-				date,
-				...entry
-			})),
-			totalHours
-		};
-
-		console.log('Timesheet Submission Data:', JSON.stringify(timesheetData, null, 2));
-		// TODO: Implement actual submission
+		// }
 	}
 
 	const handleUpdateCompany = (el: Selected<unknown> | undefined) => {
@@ -110,24 +125,38 @@
 		selectedCompany = company;
 	};
 
-	$: console.log({ companies, workdays, selectedCompany, timesheets });
-	$: {
-		const timesheetData = {
-			company: selectedCompany,
-			weekOf: format(startOfWeek(currentWeek), 'yyyy-MM-dd'),
-			entries: Object.entries(timeEntries).map(([date, entry]) => ({
-				date,
-				...entry
-			})),
-			totalHours
-		};
+	function getWorkdaysForCurrentWeek(data) {
 
-		console.log('Timesheet Submission Data:', JSON.stringify(timesheetData, null, 2));
-	}
+      const { workdays, weekDays, selectedCompany } = data;
+      if(!selectedCompany || !workdays?.length) return []
+
+      // Format weekDays to YYYY-MM-DD format for comparison
+      const formattedWeekDays = weekDays.map(weekDay => {
+        const date = new Date(weekDay);
+        return format(date, 'yyyy-MM-dd');
+      });
+
+      // Filter workdays that match the current week days and selected company
+      return workdays.filter(workday => {
+        const matchesWeekDay = formattedWeekDays.includes(workday.date);
+        const matchesCompany = workday.companyId === selectedCompany?.id;
+
+        return matchesWeekDay && matchesCompany;
+      }).sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA.getTime() - dateB.getTime();
+      });
+    }
+
 </script>
 
-<section class="container max-w-4xl mx-auto py-8 space-y-8">
-	<h1 class="text-3xl font-bold">New Timesheet</h1>
+<svelte:head>
+  <title>New Timesheet | DentalStaff.US</title>
+</svelte:head>
+
+<section class="container flex flex-col gap-6 pb-16 max-w-4xl px-4">
+	<h1 class="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">New Timesheet</h1>
 
 	<!-- Company Selection -->
 	<div class="space-y-4">
@@ -180,7 +209,7 @@
 					<div class="p-4 bg-blue-50 text-blue-800 rounded-lg flex justify-between items-center">
 						<span>A timesheet has already been submitted for this week.</span>
 						<a
-							href={`/timesheets/${timesheet?.timesheet.id}`}
+							href={`/timesheets/${timesheet?.timesheet?.id}`}
 							class="text-blue-600 hover:text-blue-800 underline"
 						>
 							View Timesheet
@@ -191,6 +220,11 @@
 						No scheduled workdays for this week.
 					</div>
 				{:else}
+				<form class="space-y-4" method="post" action="?/submitTimesheet" use:enhance>
+				    <input type="hidden" name="companyId" bind:value={selectedCompany.id} />
+                    <input type="hidden" name="weekStartDate" bind:value={weekOfDate} />
+                    <input type="hidden" name="totalHours" bind:value={totalHours} />
+                    <input type="hidden" name="entries" bind:value={jsonTimeEntries} />
 					<!-- Time Entries -->
 					<div class="space-y-4">
 						<div class="grid grid-cols-4 gap-2 items-center px-4">
@@ -199,9 +233,10 @@
 							<span class="text-xs opacity-0 md:opacity-100">End Time</span>
 							<span class="text-xs text-right">Total Hrs.</span>
 						</div>
-						{#each weekDays as day}
-							{@const dateKey = format(day, 'yyyy-MM-dd')}
-							{@const dayString = format(day, 'EEE, MMM d')}
+						{#each workdaysForCurrentWeek as day}
+
+							{@const dateKey = day.date}
+							{@const dayString = format(new Date(day.date + "T12:00:00Z"), 'EEE, MMM d')}
 							<div class="grid grid-cols-4 gap-2 items-center p-4 bg-white rounded-lg shadow-sm">
 								<div class="text-xs md:text-sm flex flex-col">
 									<span>{dayString.split(',')[0] + ','}</span>
@@ -214,7 +249,7 @@
 											type="time"
 											class="max-w-[120px] md:max-w-none border rounded px-2 py-1 flex-grow"
 											value={timeEntries[dateKey]?.startTime || ''}
-											on:input={(e) => handleTimeChange(day, 'startTime', e.currentTarget.value)}
+											on:input={(e) => handleTimeChange(new Date(day.date + "T12:00:00Z"), 'startTime', e.currentTarget.value)}
 										/>
 									</div>
 									<div class="flex gap-2 items-center justify-between flex-grow">
@@ -224,7 +259,7 @@
 											type="time"
 											class="max-w-[120px] md:max-w-none border rounded px-2 py-1 flex-grow"
 											value={timeEntries[dateKey]?.endTime || ''}
-											on:input={(e) => handleTimeChange(day, 'endTime', e.currentTarget.value)}
+											on:input={(e) => handleTimeChange(new Date(day.date + "T12:00:00Z"), 'endTime', e.currentTarget.value)}
 										/>
 									</div>
 								</div>
@@ -244,31 +279,24 @@
 					<!-- Submit Button -->
 					<Button
 						class="w-full bg-blue-800 hover:bg-blue-900 text-white py-2"
-						disabled={totalHours === 0}
-						on:click={handleSubmit}
+						disabled={totalHours === 0 || $submitting}
+						type="submit"
 					>
-						Submit Timesheet
+						{#if $submitting}
+                            Submitting...
+                        {:else}
+                            Submit Timesheet
+                        {/if}
 					</Button>
+				</form>
+
 				{/if}
 			</div>
 		{:else}
 			<div
 				class="text-center py-12 px-4 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50"
 			>
-				<svg
-					class="mx-auto h-12 w-12 text-gray-400"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-					aria-hidden="true"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-					/>
-				</svg>
+				<Building2  class="h-12 w-12 mx-auto text-gray-400"/>
 				<h3 class="mt-2 text-sm font-semibold text-gray-900">No company selected</h3>
 				<p class="mt-1 text-sm text-gray-500">
 					Please select a company from the dropdown above to begin creating your timesheet.
