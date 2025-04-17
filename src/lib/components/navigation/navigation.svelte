@@ -60,62 +60,62 @@
 
 </script>
 
-<header class="sticky top-0 z-40 w-full border-b bg-blue-900">
+<header class="sticky top-0 z-40 w-full border-b bg-white shadow-sm">
 	<div class="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
 		<div class="flex gap-6 md:gap-10">
 			<a class="flex items-center space-x-2" href="/"
-				><Logo /><span class="inline-block font-bold text-white">{APP_NAME}</span></a
+				><Logo /><span class="inline-block font-bold text-blue-800">{APP_NAME}</span></a
 			>
 			<nav class="md:flex gap-6 hidden">
 			{#if user}
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/dashboard"
 				class:active={'/dashboard' === activeUrl}>Dashboard</a
 			>
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/calendar"
 				class:active={'/calendar' === activeUrl}>Calendar</a
 			>
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/my-shifts"
 				class:active={'/my-shifts' === activeUrl}>My Shifts</a
 			>
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/permanent"
 				class:active={'/permanent' === activeUrl}>Permanent</a
 			>
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/timesheets"
 				class:active={activeUrl.includes('/timesheets')}>Timesheets</a
 			>
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/inbox"
 				class:active={activeUrl.includes('/inbox')}>Inbox</a
 			>
 			{:else}
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/candidates"
 				class:active={'/candidates' === activeUrl}>For Candidates</a
 			>
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/staffing-solutions"
 				class:active={'/staffing-solutions' === activeUrl}>For Dentists</a
 			>
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/contact-us"
 				class:active={activeUrl.includes('/contact-us')}>Contact Us</a
 			>
 			<a
-				class="flex items-center text-sm font-medium text-white"
+				class="flex items-center text-sm font-medium text-blue-800"
 				href="/about-us"
 				class:active={activeUrl.includes('/about-us')}>About Us</a
 			>
@@ -125,7 +125,8 @@
 		<div class="flex flex-1 items-center justify-end space-x-4">
 			<nav class="md:flex items-center space-x-1 hidden">
 				{#if !user}
-					<Button on:click={() => goto('/auth/sign-in')}>Sign in</Button>
+					<Button class="bg-blue-800 hover:bg-blue-900" on:click={() => goto('/auth/sign-up')}>Get Started</Button>
+					<Button variant="outline" class="text-blue-800" on:click={() => goto('/auth/sign-in')}>Sign in</Button>
 				{:else}
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger asChild let:builder>
@@ -160,14 +161,13 @@
 			<nav class="md:hidden flex items-center space-x-1">
 				<Button
 					variant="ghost"
-					class="hover:bg-blue-800"
 					size="icon"
 					on:click={() => (hidden = false)}
 				>
-					<Menu class="h-[1.2rem] w-[1.2rem]" color="white" />
+					<Menu class="h-[1.2rem] w-[1.2rem] text-blue-800"  />
 				</Button>
 				<Drawer
-					class="bg-blue-900 -left-2 flex flex-col w-full max-w-[400px]"
+					class="bg-white -left-2 flex flex-col w-full max-w-[400px]"
 					transitionType="fly"
 					{transitionParams}
 					bind:hidden
@@ -176,61 +176,77 @@
 					<div class="flex items-center">
 						<CloseButton
 							on:click={() => (hidden = true)}
-							class="mb-4 text-white hover:bg-blue-800"
+							class="mb-4 text-blue-800"
 						/>
 					</div>
 					<Sidebar
 						{activeUrl}
-						activeClass="flex items-center p-2 text-base font-normal text-white bg-blue-800 rounded-lg hover:bg-blue-800"
-						nonActiveClass="flex items-center p-2 text-base font-normal text-white bg-blue-900 rounded-lg hover:bg-blue-800"
+						activeClass="flex items-center p-2 text-base font-normal text-blue-900 bg-gray-200 rounded-lg"
+						nonActiveClass="flex items-center p-2 text-base font-normal text-blue-800 bg-white rounded-lg"
 					>
-						<SidebarWrapper class="bg-blue-900 flex flex-col gap-2 items-stretch">
+						<SidebarWrapper class="bg-white flex flex-col gap-2 items-stretch">
+							{#if user}
 							<SidebarGroup class="flex-1">
 								<SidebarItem on:click={() => (hidden = true)} label="Dashboard" href="/dashboard">
 									<svelte:fragment slot="icon">
 										<Home
-											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
+											class="w-6 h-6  transition duration-75 "
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 								<SidebarItem on:click={() => (hidden = true)} label="Calendar" href="/calendar">
 									<svelte:fragment slot="icon">
 										<CalendarSearch
-											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
+											class="w-6 h-6 text-blue-800 transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 								<SidebarItem on:click={() => (hidden = true)} label="My Shifts" href="/my-shifts">
 									<svelte:fragment slot="icon">
 										<Building
-											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
+											class="w-6 h-6 text-blue-800 transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 								<SidebarItem on:click={() => (hidden = true)} label="Job Listings" href="/permanent">
 									<svelte:fragment slot="icon">
 										<Briefcase
-											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
+											class="w-6 h-6 text-blue-800 transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 								<SidebarItem on:click={() => (hidden = true)} label="Timesheets" href="/timesheets">
 									<svelte:fragment slot="icon">
 										<CalendarClock
-											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
+											class="w-6 h-6 text-blue-800 transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 								<SidebarItem on:click={() => (hidden = true)} label="Inbox" href="/inbox">
 									<svelte:fragment slot="icon">
 										<MessageCircle
-											class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900"
+											class="w-6 h-6 text-blue-800 transition duration-75 group-hover:text-gray-900"
 										/>
 									</svelte:fragment>
 								</SidebarItem>
 							</SidebarGroup>
+							{:else}
+							<SidebarGroup class="flex-1">
+								<SidebarItem on:click={() => (hidden = true)} label="For Candidates" href="/#candidates">
+								</SidebarItem>
+								<SidebarItem on:click={() => (hidden = true)} label="For Dentists" href="/#dentists">
+								</SidebarItem>
+								<SidebarItem on:click={() => (hidden = true)} label="Contact Us" href="/#contact">
+								</SidebarItem>
+								<SidebarItem on:click={() => (hidden = true)} label="About Us" href="/about-us">
+								</SidebarItem>
+								<SidebarItem on:click={() => (hidden = true)} label="Job Search" href="/job-board">
+								</SidebarItem>
+							</SidebarGroup>
+							{/if}
 						</SidebarWrapper>
 					</Sidebar>
+					{#if user}
 					<a href="/settings" class="mt-auto">
     					<div class="flex gap-4 items-center">
            					<Avatar.Root class="h-12 w-12">
@@ -244,6 +260,7 @@
                             <ChevronRight class="text-white shrink-0" size={24}/>
     					</div>
 					</a>
+					{/if}
 				</Drawer>
 			</nav>
 		</div>

@@ -9,7 +9,8 @@
   import {
     CalendarDays, Clock, Building, FileText, DollarSign,
     ArrowLeft, CheckCircle2, X, AlertCircle, Calendar,
-    Info, Download, Printer, Clipboard
+    Info, Download, Printer, Clipboard,
+	AlertTriangle
   } from "lucide-svelte";
   import type { PageData } from "./$types";
   import { format, parseISO, isValid, addDays } from 'date-fns';
@@ -31,14 +32,18 @@
 
   // Get status badge for timesheet
   function getTimesheetStatusBadge(timesheet) {
-    if (!timesheet) return { variant: "default", text: "Loading...", icon: Clock };
+    if (!timesheet) return {text: "Loading...", icon: Clock };
 
-    if (timesheet.validated && !timesheet.awaitingClientSignature) {
-      return { variant: "success", text: "Approved", icon: CheckCircle2 };
-    } else if (timesheet.awaitingClientSignature) {
-      return { variant: "warning", text: "Awaiting Signature", icon: AlertCircle };
-    } else {
-      return { variant: "secondary", text: "Draft", icon: FileText };
+    if (timesheet.status === "APPROVED" && !timesheet.awaitingClientSignature) {
+      return { text: "APPROVED", icon: CheckCircle2 };
+    } else if (timesheet.status === 'PENDING') {
+      return { text: "PENDING", icon: AlertCircle };
+    } else if (timesheet.status === 'DISCREPANCY') {
+      return { text: "DISCREPANCY", icon: AlertTriangle };
+    } else if (timesheet.status === 'VOID') {
+      return { text: "VOID", icon: X };
+    } else if (timesheet.status === 'REJECTED') {
+      return { text: "REJECTED", icon: X };
     }
   }
 
