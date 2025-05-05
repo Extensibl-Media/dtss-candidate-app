@@ -13,7 +13,7 @@
 	AlertTriangle
   } from "lucide-svelte";
   import type { PageData } from "./$types";
-  import { format, parseISO, isValid, addDays } from 'date-fns';
+  import { format, parseISO, isValid, addDays, parse } from 'date-fns';
   import { cn } from "$lib/utils";
 
   export let data: PageData;
@@ -24,7 +24,7 @@
   $: recurrenceDay = data.recurrenceDay;
 
   // Format dates for display
-  $: weekBeginDate = timesheet?.weekBeginDate ? new Date(timesheet.weekBeginDate) : new Date();
+  $: weekBeginDate = parse(timesheet.weekBeginDate, 'yyyy-MM-dd', new Date());
   $: weekEndDate = addDays(weekBeginDate, 6);
   $: formattedWeekRange = isValid(weekBeginDate) ?
     `${format(weekBeginDate, 'MMM d')} - ${format(weekEndDate, 'MMM d, yyyy')}` :

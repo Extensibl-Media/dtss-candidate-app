@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { PlusIcon } from 'lucide-svelte';
-	import { format } from 'date-fns';
+	import { format, parse } from 'date-fns';
     export let data
     $: timesheets = data.timesheets;
 
@@ -53,9 +53,9 @@
 							</div>
 						</div>
 					</Table.Cell>
-					<Table.Cell>{format(data.timesheet.weekBeginDate, "PP")}</Table.Cell>
+					<Table.Cell>{format(parse(data.timesheet.weekBeginDate, 'yyyy-MM-dd', new Date()), "PP")}</Table.Cell>
 					<Table.Cell>
-						<Badge >{data.timesheet.awaitingClientSignature ? "PENDING" : "APPROVED"}</Badge>
+						<Badge variant="destructive">{data.timesheet.status}</Badge>
 					</Table.Cell>
 				</Table.Row>
 			{/each}
