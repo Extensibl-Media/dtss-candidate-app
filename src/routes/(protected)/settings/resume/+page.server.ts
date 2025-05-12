@@ -1,6 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 import { superValidate, message, setError } from 'sveltekit-superforms/server';
 import { documentUrlSchema } from '$lib/config/zod-schemas';
@@ -16,7 +16,7 @@ export const load: PageServerLoad = async (event) => {
 
 	const token = generateToken(userId);
 
-	const profileReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
+	const profileReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${token}` }
 	});
@@ -28,11 +28,14 @@ export const load: PageServerLoad = async (event) => {
 		throw error(profileReq.status, 'Failed to fetch profile');
 	}
 
-	const resumeReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getRecentCandidateResume`, {
-		headers: {
-			Authorization: `Bearer ${token}`
+	const resumeReq = await fetch(
+		`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getRecentCandidateResume`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
 		}
-	});
+	);
 
 	if (!resumeReq.ok) {
 		throw error(resumeReq.status, 'Failed to fetch resume');
@@ -72,7 +75,7 @@ export const actions: Actions = {
 			const token = generateToken(user.id);
 
 			const response = await fetch(
-				`${env.CLIENT_APP_DOMAIN}/api/external/createCandidateDocument`,
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/createCandidateDocument`,
 				{
 					method: 'POST',
 					headers: {

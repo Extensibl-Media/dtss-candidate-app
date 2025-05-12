@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { error, fail, redirect, type RequestEvent } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { getSavedJobs } from '$lib/server/cache/cacheUtils';
 import { generateToken } from '$lib/server/utils';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async (event) => {
 
 	try {
 		const response = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/getRequisitionDetails/${id}`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getRequisitionDetails/${id}`,
 			{
 				method: 'GET'
 			}
@@ -37,11 +37,14 @@ export const load: PageServerLoad = async (event) => {
 
 		const requisition = await response.json();
 		const savedOpenings = await getSavedJobs(user.id, token);
-		const appliedReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getAppliedRequisitions`, {
-			headers: {
-				Authorization: `Bearer ${token}`
+		const appliedReq = await fetch(
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getAppliedRequisitions`,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
 			}
-		});
+		);
 
 		const appliedOpenings = await appliedReq.json();
 
@@ -96,7 +99,7 @@ export const actions = {
 		}
 
 		try {
-			const req = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/applyForRequisition`, {
+			const req = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/applyForRequisition`, {
 				method: 'POST',
 				body: JSON.stringify({ requisitionId: idAsNum }),
 				headers: {

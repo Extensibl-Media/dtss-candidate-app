@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 import { superValidate } from 'sveltekit-superforms/server';
 import { z } from 'zod';
@@ -23,7 +23,7 @@ export const load: PageServerLoad = async (event) => {
 
 	try {
 		const response = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/inbox/getConversationDetails/${id}`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/inbox/getConversationDetails/${id}`,
 			{
 				method: 'GET',
 				headers: {
@@ -71,7 +71,7 @@ export const actions = {
 		console.log({ finalData: form.data });
 		try {
 			const response = await fetch(
-				`${env.CLIENT_APP_DOMAIN}/api/external/inbox/sendMessage/${event.params.id}`,
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/inbox/sendMessage/${event.params.id}`,
 				{
 					method: 'POST',
 					headers: {

@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	try {
 		// Fetch the timesheet details from your API
 		const response = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/timesheets/getTimesheetDetails/${timesheetId}`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/getTimesheetDetails/${timesheetId}`,
 			{
 				method: 'GET',
 				headers: { Authorization: `Bearer ${token}` }
@@ -64,7 +64,7 @@ export const actions = {
 
 		try {
 			const response = await fetch(
-				`${env.CLIENT_APP_DOMAIN}/api/external/timesheets/${timesheetId}/validate`,
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/${timesheetId}/validate`,
 				{
 					method: 'POST',
 					headers: {

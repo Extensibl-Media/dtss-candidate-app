@@ -1,9 +1,9 @@
 import { generateToken } from '$lib/server/utils';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
 import type { PageServerLoad, RequestEvent } from './$types';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { recurrenceDayClaimSchema } from '$lib/config/zod-schemas';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 
 export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 	setHeaders({
@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 
 	try {
 		const recurrenceDayReq = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/getTempRequisitionsForCandidate`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getTempRequisitionsForCandidate`,
 			{
 				method: 'GET',
 				headers: { Authorization: `Bearer ${token}` }
@@ -41,7 +41,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 
 		const recurrenceDays = await recurrenceDayReq.json();
 
-		const profileReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
+		const profileReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
 			method: 'GET',
 			headers: { Authorization: `Bearer ${token}` }
 		});
@@ -94,11 +94,11 @@ export const actions = {
 
 		try {
 			console.log('Sending claim request to API:', {
-				endpoint: `${env.CLIENT_APP_DOMAIN}/api/external/applyForTempRequisition`,
+				endpoint: `${PUBLIC_CLIENT_APP_DOMAIN}/api/external/applyForTempRequisition`,
 				recurrenceDayId
 			});
 
-			const req = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/applyForTempRequisition`, {
+			const req = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/applyForTempRequisition`, {
 				method: 'POST',
 				body: JSON.stringify({ recurrenceDayId }),
 				headers: {

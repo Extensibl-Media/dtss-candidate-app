@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { generateToken } from '$lib/server/utils';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 
 export const load: PageServerLoad = async (event) => {
 	event.setHeaders({
@@ -19,7 +19,7 @@ export const load: PageServerLoad = async (event) => {
 	const token = generateToken(user.id);
 
 	const timesheetsReq = await fetch(
-		`${env.CLIENT_APP_DOMAIN}/api/external/timesheets/getTimesheetsForUser`,
+		`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/getTimesheetsForUser`,
 		{
 			method: 'GET',
 			headers: { Authorization: `Bearer ${token}` }

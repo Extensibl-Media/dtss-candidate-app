@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad, RequestEvent } from './$types';
 import { generateToken } from '$lib/server/utils';
-import { CLIENT_APP_DOMAIN } from '$env/static/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
 	event.setHeaders({
@@ -17,7 +17,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 	const { id } = event.params;
 
 	const workdayReq = await fetch(
-		`${CLIENT_APP_DOMAIN}/api/external/getWorkdayDetailsForCandidate/${id}`,
+		`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getWorkdayDetailsForCandidate/${id}`,
 		{
 			method: 'GET',
 			headers: { Authorization: `Bearer ${token}` }

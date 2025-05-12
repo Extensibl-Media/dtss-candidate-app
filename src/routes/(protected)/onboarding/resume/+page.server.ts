@@ -1,6 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 import { superValidate, message, setError } from 'sveltekit-superforms/server';
 import { documentUrlSchema } from '$lib/config/zod-schemas';
@@ -22,7 +22,7 @@ export const load: PageServerLoad = async (event) => {
 	const token = generateToken(userId);
 
 	// Fetch candidate profile
-	const profileReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
+	const profileReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${token}` }
 	});
@@ -67,10 +67,13 @@ export const actions: Actions = {
 		try {
 			const token = generateToken(user.id);
 
-			const profileReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
-				method: 'GET',
-				headers: { Authorization: `Bearer ${token}` }
-			});
+			const profileReq = await fetch(
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`,
+				{
+					method: 'GET',
+					headers: { Authorization: `Bearer ${token}` }
+				}
+			);
 
 			if (!profileReq.ok) {
 				if (profileReq.status === 401) {
@@ -81,7 +84,7 @@ export const actions: Actions = {
 			const profile = await profileReq.json();
 
 			const response = await fetch(
-				`${env.CLIENT_APP_DOMAIN}/api/external/createCandidateDocument`,
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/createCandidateDocument`,
 				{
 					method: 'POST',
 					headers: {
@@ -101,7 +104,7 @@ export const actions: Actions = {
 				throw new Error(`Failed to update resume: ${response.statusText}`);
 			}
 
-			const userResponse = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
+			const userResponse = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${token}`,

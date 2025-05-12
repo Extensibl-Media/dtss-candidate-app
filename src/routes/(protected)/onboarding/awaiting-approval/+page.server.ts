@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { generateToken } from '$lib/server/utils';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 
 export const load: PageServerLoad = async (event) => {
 	const user = event.locals.user;
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async (event) => {
 	const token = generateToken(userId);
 
 	// Fetch candidate profile
-	const profileReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
+	const profileReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${token}` }
 	});

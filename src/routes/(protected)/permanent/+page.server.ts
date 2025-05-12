@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 
 export const load: PageServerLoad = async ({ fetch, locals, setHeaders }) => {
@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ fetch, locals, setHeaders }) => {
 
 	try {
 		const requisitionRes = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/getOpeningsForCandidate`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getOpeningsForCandidate`,
 			{
 				method: 'GET',
 				headers: {
@@ -38,12 +38,15 @@ export const load: PageServerLoad = async ({ fetch, locals, setHeaders }) => {
 			}
 			throw error(requisitionRes.status, 'Failed to fetch requisitions');
 		}
-		const appliedReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getAppliedRequisitions`, {
-			method: 'GET',
-			headers: {
-				Authorization: `Bearer ${token}`
+		const appliedReq = await fetch(
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getAppliedRequisitions`,
+			{
+				method: 'GET',
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
 			}
-		});
+		);
 
 		if (!appliedReq.ok) {
 			if (appliedReq.status === 401) {

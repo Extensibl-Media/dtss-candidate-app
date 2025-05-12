@@ -1,13 +1,11 @@
 import type { PageServerLoad, RequestEvent } from './$types';
-import { env } from '$env/dynamic/private';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { generateToken } from '$lib/server/utils';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { z } from 'zod';
-import { CLIENT_APP_DOMAIN } from '$env/static/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { setFlash } from 'sveltekit-flash-message/server';
 import { zJsonString } from '$lib/config/zod-schemas';
-import { invalidateAll } from '$app/navigation';
 
 const newTimesheetSchema = z.object({
 	companyId: z.string().min(1, 'Company ID is required'),
@@ -37,7 +35,7 @@ export const load: PageServerLoad = async (event) => {
 	const form = await superValidate(event, newTimesheetSchema);
 	try {
 		const response = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/timesheets/getCompaniesForCandidate`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/getCompaniesForCandidate`,
 			{
 				method: 'GET',
 				headers: { Authorization: `Bearer ${token}` }
@@ -47,7 +45,7 @@ export const load: PageServerLoad = async (event) => {
 			data: { companies }
 		} = await response.json();
 
-		const profileReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
+		const profileReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
 			method: 'GET',
 			headers: { Authorization: `Bearer ${token}` }
 		});
@@ -62,7 +60,7 @@ export const load: PageServerLoad = async (event) => {
 		const profile = await profileReq.json();
 
 		const workdayReq = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/timesheets/getWorkdaysForCandidate`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/getWorkdaysForCandidate`,
 			{
 				method: 'GET',
 				headers: { Authorization: `Bearer ${token}` }
@@ -73,7 +71,7 @@ export const load: PageServerLoad = async (event) => {
 		} = await workdayReq.json();
 
 		const timesheetsReq = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/timesheets/getTimesheetsForUser`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/getTimesheetsForUser`,
 			{
 				method: 'GET',
 				headers: { Authorization: `Bearer ${token}` }
@@ -126,7 +124,7 @@ export const actions = {
 		};
 
 		const response = await fetch(
-			`${CLIENT_APP_DOMAIN}/api/external/timesheets/submitTimesheetForCandidate`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/submitTimesheetForCandidate`,
 			{
 				method: 'POST',
 				headers: {

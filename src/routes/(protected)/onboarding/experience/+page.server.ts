@@ -1,6 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 import { superValidate, message, setError } from 'sveltekit-superforms/server';
 import { newCandidateDisciplinesSchema } from '$lib/config/zod-schemas';
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async (event) => {
 	const token = generateToken(userId);
 
 	// Fetch candidate profile
-	const profileReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
+	const profileReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${token}` }
 	});
@@ -33,7 +33,7 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	// Fetch all disciplines
-	const disciplinesReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getAllDisciplines`);
+	const disciplinesReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getAllDisciplines`);
 
 	if (!disciplinesReq.ok) {
 		if (disciplinesReq.status === 401) {
@@ -43,7 +43,7 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	// Fetch experience levels
-	const experienceReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getExperienceLevels`);
+	const experienceReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getExperienceLevels`);
 
 	if (!experienceReq.ok) {
 		if (experienceReq.status === 401) {
@@ -96,7 +96,7 @@ export const actions: Actions = {
 		try {
 			const token = generateToken(user.id);
 			const response = await fetch(
-				`${env.CLIENT_APP_DOMAIN}/api/external/onboarding/addCandidateDisciplines`,
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/onboarding/addCandidateDisciplines`,
 				{
 					method: 'POST',
 					headers: {
@@ -111,7 +111,7 @@ export const actions: Actions = {
 				return setError(form, `Failed to update disciplines: ${response.statusText}`);
 			}
 
-			const userResponse = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
+			const userResponse = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${token}`,

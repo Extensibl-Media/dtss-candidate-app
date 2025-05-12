@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 
 export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	const user = locals.user;
@@ -16,9 +16,12 @@ export const load: PageServerLoad = async ({ fetch, params, locals }) => {
 	const { id } = params;
 
 	try {
-		const response = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCompanyDetails/${id}`, {
-			method: 'GET'
-		});
+		const response = await fetch(
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCompanyDetails/${id}`,
+			{
+				method: 'GET'
+			}
+		);
 
 		if (!response.ok) {
 			if (response.status === 401) {

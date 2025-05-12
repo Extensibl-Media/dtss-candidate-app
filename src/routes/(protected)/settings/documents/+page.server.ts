@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { generateToken } from '$lib/server/utils';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { documentUrlSchema } from '$lib/config/zod-schemas';
 import { setFlash } from 'sveltekit-flash-message/server';
 import { superValidate, message, setError } from 'sveltekit-superforms/server';
@@ -13,7 +13,7 @@ export const load: PageServerLoad = async (event) => {
 	}
 	const token = generateToken(user.id);
 	const documentsResponse = await fetch(
-		`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateDocuments`,
+		`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateDocuments`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -56,7 +56,7 @@ export const actions = {
 			const token = generateToken(user.id);
 
 			const response = await fetch(
-				`${env.CLIENT_APP_DOMAIN}/api/external/createCandidateDocument`,
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/createCandidateDocument`,
 				{
 					method: 'POST',
 					headers: {
@@ -75,7 +75,7 @@ export const actions = {
 				throw new Error(`Failed to update resume: ${response.statusText}`);
 			}
 
-			const userResponse = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
+			const userResponse = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${token}`,

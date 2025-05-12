@@ -1,4 +1,4 @@
-import { CLIENT_APP_DOMAIN } from '$env/static/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '../utils';
 import { error } from '@sveltejs/kit';
 
@@ -16,9 +16,12 @@ export async function getSavedJobs(userId: string, token: string | undefined = u
 		if (!token) token = generateToken(userId);
 
 		// Cache miss - fetch from server
-		const res = await fetch(`${CLIENT_APP_DOMAIN}/api/external/getSavedOpeningsForCandidate`, {
-			headers: { Authorization: `Bearer ${token}` }
-		});
+		const res = await fetch(
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getSavedOpeningsForCandidate`,
+			{
+				headers: { Authorization: `Bearer ${token}` }
+			}
+		);
 
 		const rows = await res.json();
 

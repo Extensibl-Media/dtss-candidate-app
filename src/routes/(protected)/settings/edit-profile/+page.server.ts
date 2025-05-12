@@ -2,7 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { updateProfileSchema, avatarUrlSchema } from '$lib/config/zod-schemas';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 import { STATES } from '$lib/config/constants';
 import { format } from 'date-fns';
@@ -19,7 +19,7 @@ export const load: PageServerLoad = async (event) => {
 
 	const token = generateToken(userId);
 
-	const profileReq = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
+	const profileReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
 		method: 'GET',
 		headers: { Authorization: `Bearer ${token}` }
 	});
@@ -78,7 +78,7 @@ export const actions: Actions = {
 		console.log({ urlOnServer: url });
 
 		try {
-			const response = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
+			const response = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -138,7 +138,7 @@ export const actions: Actions = {
 
 		try {
 			const candidateResponse = await fetch(
-				`${env.CLIENT_APP_DOMAIN}/api/external/updateCandidateProfile`,
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/updateCandidateProfile`,
 				{
 					method: 'POST',
 					headers: {
@@ -149,7 +149,7 @@ export const actions: Actions = {
 				}
 			);
 
-			const userResponse = await fetch(`${env.CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
+			const userResponse = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/updateUserData`, {
 				method: 'POST',
 				headers: {
 					Authorization: `Bearer ${token}`,

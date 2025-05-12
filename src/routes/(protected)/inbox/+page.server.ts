@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 import { redirect } from 'sveltekit-flash-message/server';
 
@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
 
 	try {
 		const response = await fetch(
-			`${env.CLIENT_APP_DOMAIN}/api/external/inbox/getConversationsForUser`,
+			`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/inbox/getConversationsForUser`,
 			{
 				method: 'GET',
 				headers: {
