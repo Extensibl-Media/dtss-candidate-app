@@ -4,7 +4,7 @@
 	import { Building, Building2, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	// import type { WorkdaysResponse, Company, Workday } from './types';
 	import { onMount } from 'svelte';
-	import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, eachDayOfInterval, getDay } from 'date-fns';
+	import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, eachDayOfInterval, getDay, parse } from 'date-fns';
 	import type { PageData } from './$types';
 	import type { Selected } from 'bits-ui';
 	import { superForm } from 'sveltekit-superforms/client';
@@ -93,7 +93,7 @@
 	function hasExistingTimesheet(date: Date): boolean {
 		const weekStart = format(startOfWeek(date), 'yyyy-MM-dd');
 		return timesheets.some(
-			(ts) => format(new Date(ts.timesheet.weekBeginDate), 'yyyy-MM-dd') === weekStart
+			(ts) => format(parse(ts.timesheet.weekBeginDate, 'yyyy-MM-dd', new Date()), 'yyyy-MM-dd') === weekStart
 		);
 	}
 
@@ -203,7 +203,7 @@
 				{#if existingTimesheet}
 					{@const timesheet = timesheets.find(
 						(ts) =>
-							format(new Date(ts.timesheet.weekBeginDate), 'yyyy-MM-dd') ===
+							format(parse(ts.timesheet.weekBeginDate, 'yyyy-MM-dd', new Date()), 'yyyy-MM-dd') ===
 							format(startOfWeek(currentWeek), 'yyyy-MM-dd')
 					)}
 					<div class="p-4 bg-blue-50 text-blue-800 rounded-lg flex justify-between items-center">
