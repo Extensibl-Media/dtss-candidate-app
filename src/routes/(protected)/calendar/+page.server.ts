@@ -4,6 +4,7 @@ import type { PageServerLoad, RequestEvent } from './$types';
 import { message, setError, superValidate } from 'sveltekit-superforms/server';
 import { recurrenceDayClaimSchema } from '$lib/config/zod-schemas';
 import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
+import { setFlash } from 'sveltekit-flash-message/server';
 
 export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 	setHeaders({
@@ -93,11 +94,6 @@ export const actions = {
 		}
 
 		try {
-			console.log('Sending claim request to API:', {
-				endpoint: `${PUBLIC_CLIENT_APP_DOMAIN}/api/external/applyForTempRequisition`,
-				recurrenceDayId
-			});
-
 			const req = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/applyForTempRequisition`, {
 				method: 'POST',
 				body: JSON.stringify({ recurrenceDayId }),
@@ -108,15 +104,7 @@ export const actions = {
 				credentials: 'include'
 			});
 
-			console.log('API Response:', {
-				status: req.status,
-				statusText: req.statusText,
-				headers: Object.fromEntries(req.headers.entries()),
-				url: req.url
-			});
-
 			const responseData = await req.json();
-			console.log('API Response Data:', responseData);
 
 			if (!req.ok || !responseData.success) {
 				return fail(req.status || 403, {
@@ -128,7 +116,13 @@ export const actions = {
 					}
 				});
 			}
-
+			setFlash(
+				{
+					type: 'success',
+					message: 'Successfully claimed shift.'
+				},
+				event
+			);
 			return message(form, 'Successfully claimed shift!');
 		} catch (err) {
 			console.error('Server Error:', {
@@ -137,7 +131,13 @@ export const actions = {
 				recurrenceDayId,
 				timestamp: new Date().toISOString()
 			});
-
+			setFlash(
+				{
+					type: 'error',
+					message: 'Something went wrong while claiming the shift'
+				},
+				event
+			);
 			return fail(500, {
 				form: {
 					...form,

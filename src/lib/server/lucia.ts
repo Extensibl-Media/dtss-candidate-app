@@ -35,7 +35,9 @@ export const lucia = new Lucia(adapter, {
 			token: attributes.token,
 			completedOnboarding: attributes.completedOnboarding,
 			onboardingStep: attributes.onboardingStep,
-			blacklisted: attributes.blacklisted
+			blacklisted: attributes.blacklisted,
+			timezone: attributes.timezone,
+			stripeCustomerId: attributes.stripeCustomerId
 		};
 	}
 });
@@ -63,6 +65,8 @@ interface DatabaseUserAttributes {
 	completedOnboarding: boolean;
 	onboardingStep: number;
 	blacklisted: boolean;
+	stripeCustomerId: string;
+	timezone: string;
 }
 
 /*interface DatabaseSessionAttributes {

@@ -1,3 +1,4 @@
+import { formatTimestampForDisplay, getUserTimezone } from '$lib/_helpers/UTCTimezoneUtils';
 import { format, parseISO } from 'date-fns';
 
 export type CalendarEvent = {
@@ -119,9 +120,17 @@ export function convertRecurrenceDayToEvent(data: {
 	const isoDate = parseISO(date);
 	const dateString = format(isoDate, 'yyyy-MM-dd');
 
+	// Get reference timezone from the requisition
+	const timezone = getUserTimezone() || 'America/New_York'; // Default to EST if no timezone is set
+
+	// Convert UTC timestamps to local timezone display times
+	// We need to create proper Date objects from the timestamps
+	const localDayStart = formatTimestampForDisplay(startTime, timezone);
+	const localDayEnd = formatTimestampForDisplay(endTime, timezone);
+
 	return {
-		start: `${dateString} ${startTime}`,
-		end: `${dateString} ${endTime}`,
+		start: localDayStart, // Display the local start time
+		end: localDayEnd, // Display the local end time
 		resourceIds: [requisition.id, recurrenceDayId],
 		title: requisition.title,
 		data: requisition,

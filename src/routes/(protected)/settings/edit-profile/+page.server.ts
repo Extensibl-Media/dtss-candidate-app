@@ -38,6 +38,7 @@ export const load: PageServerLoad = async (event) => {
 			firstName: user.firstName,
 			lastName: user.lastName,
 			email: user.email,
+			timezone: user.timezone,
 			...profile,
 			birthday: format(new Date(profile.birthday), 'yyyy-MM-dd'),
 			address: profile.address || '',
@@ -122,7 +123,8 @@ export const actions: Actions = {
 		const userData = {
 			email: form.data.email,
 			firstName: form.data.firstName,
-			lastName: form.data.lastName
+			lastName: form.data.lastName,
+			timezone: form.data.timezone
 		};
 
 		const candidateData = {

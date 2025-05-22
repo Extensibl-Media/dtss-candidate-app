@@ -7,8 +7,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { PlusIcon } from 'lucide-svelte';
 	import { format, parse } from 'date-fns';
-    export let data
-    $: timesheets = data.timesheets;
+	export let data;
+	$: timesheets = data.timesheets;
 
 	const statusColor = (status: string) => {
 		switch (status) {
@@ -21,7 +21,7 @@
 </script>
 
 <svelte:head>
-  <title>Timesheets | DentalStaff.US</title>
+	<title>Timesheets | DentalStaff.US</title>
 </svelte:head>
 
 <section class="container flex flex-col gap-6 pb-16 max-w-4xl px-4">
@@ -46,16 +46,25 @@
 				<Table.Row class="cursor-pointer" on:click={() => goto(`/timesheets/${data.timesheet.id}`)}>
 					<Table.Cell class="font-medium">
 						<div class="flex flex-row gap-2 items-center">
-						    <img alt="company logo" class="md:w-12 h-8 w-8 md:h-12" src={data.company.logo} />
+							<img alt="company logo" class="md:w-12 h-8 w-8 md:h-12" src={data.company.logo} />
 							<div>
-							    <p class="">{data.requisition.title}</p>
+								<p class="">{data.requisition.title}</p>
 								<p class="text-xs text-gray-700">{data.company.name}</p>
 							</div>
 						</div>
 					</Table.Cell>
-					<Table.Cell>{format(parse(data.timesheet.weekBeginDate, 'yyyy-MM-dd', new Date()), "PP")}</Table.Cell>
+					<Table.Cell>{format(data.timesheet.weekBeginDate, 'PP')}</Table.Cell>
 					<Table.Cell>
-						<Badge variant="destructive">{data.timesheet.status}</Badge>
+						<Badge
+							class={cn(
+								data?.timesheet?.status === 'PENDING' && 'bg-yellow-300 hover:bg-yellow-400',
+								data?.timesheet?.status === 'DISCREPANCY' && 'bg-orange-400 hover:bg-orange-500',
+								data?.timesheet?.status === 'APPROVED' && 'bg-green-400 hover:bg-green-600',
+								data?.timesheet?.status === 'VOID' && 'bg-gray-200 hover:bg-gray-300',
+								data?.timesheet?.status === 'REJECTED' && 'bg-red-500 hover:bg-red-600'
+							)}
+							variant="default">{data.timesheet.status}</Badge
+						>
 					</Table.Cell>
 				</Table.Row>
 			{/each}

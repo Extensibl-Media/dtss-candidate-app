@@ -115,6 +115,13 @@ export const actions = {
 			return fail(400, { form });
 		}
 		const { companyId, weekStartDate, entries, totalHours } = form.data;
+		const testDate = new Date(weekStartDate);
+
+		console.log('date data', {
+			testDate,
+			weekStartDate
+		});
+
 		const timesheetData = {
 			companyId,
 			weekStartDate,

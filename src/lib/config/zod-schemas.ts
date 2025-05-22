@@ -107,7 +107,8 @@ export const updateProfileSchema = z.object({
 	cellPhone: z.string().optional(),
 	citizenship: z.string().optional(),
 	birthday: z.string().optional(),
-	regionId: z.string().optional()
+	regionId: z.string().optional(),
+	timezone: z.string().optional()
 });
 export type UpdateProfileSchema = typeof newProfileSchema;
 

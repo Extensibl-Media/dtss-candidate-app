@@ -1,270 +1,233 @@
 <script lang="ts">
-  import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import { Badge } from "$lib/components/ui/badge";
-  import { Separator } from "$lib/components/ui/separator";
-  import { Alert, AlertDescription, AlertTitle } from "$lib/components/ui/alert";
-  import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "$lib/components/ui/dialog";
-  import { Textarea } from "$lib/components/ui/textarea";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { Tabs, TabsContent, TabsList, TabsTrigger } from "$lib/components/ui/tabs";
-  import { CalendarDays, Clock, MapPin, Building, FileText, DollarSign, Phone, Mail, ArrowLeft, CheckCircle2, X, AlertCircle, Clipboard, Calendar, Info, User } from "lucide-svelte";
-	import type { PageData } from "./$types";
-	import { differenceInMinutes } from "date-fns/fp";
+	import {
+		Card,
+		CardContent,
+		CardDescription,
+		CardFooter,
+		CardHeader,
+		CardTitle
+	} from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Separator } from '$lib/components/ui/separator';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
+	import {
+		Dialog,
+		DialogContent,
+		DialogDescription,
+		DialogFooter,
+		DialogHeader,
+		DialogTitle,
+		DialogTrigger
+	} from '$lib/components/ui/dialog';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
+	import {
+		CalendarDays,
+		Clock,
+		MapPin,
+		Building,
+		FileText,
+		DollarSign,
+		Phone,
+		Mail,
+		ArrowLeft,
+		CheckCircle2,
+		X,
+		AlertCircle,
+		Clipboard,
+		Calendar,
+		Info,
+		User
+	} from 'lucide-svelte';
+	import type { PageData } from './$types';
+	import { differenceInMinutes } from 'date-fns/fp';
+	import { format } from 'date-fns';
+	import { enhance } from '$app/forms';
 
-  export let data: PageData;
+	export let data: PageData;
 
-  // For demonstration purposes - in a real app, this would be controlled by the actual shift date
-  // compared to current date, and the status of the shift
-  const isUpcoming = new Date(data.workday?.recurrenceDay?.date) > new Date();
-  const isPast = !isUpcoming;
-  // const canSubmitTimesheet = isPast && (!timesheet || timesheet.status === 'draft');
-  // const canCancelShift = isUpcoming && shift.status === 'confirmed';
-  //
+	// For demonstration purposes - in a real app, this would be controlled by the actual shift date
+	// compared to current date, and the status of the shift
+	const isUpcoming = new Date(data.workday?.recurrenceDay?.dayStart) > new Date();
+	const isPast = !isUpcoming;
+	// const canSubmitTimesheet = isPast && (!timesheet || timesheet.status === 'draft');
+	const canCancelShift = isUpcoming && data.workday.recurrenceDay.status === 'FILLED';
 
+	$: console.log({ canCancelShift });
 
-$: console.log(data)
-  // UI state
-  let isCancelDialogOpen = false;
-  let cancelReason = "";
-  let isSubmitting = false;
+	$: console.log(data);
+	$: console.log('Can cancel shift:', canCancelShift);
+	// UI state
+	let isCancelDialogOpen = false;
+	let cancelReason = '';
+	let isSubmitting = false;
 
-  // For the timesheet form
-  // let timesheetStartTime = timesheet?.startTime || shift.startTime;
-  // let timesheetEndTime = timesheet?.endTime || shift.endTime;
-  // let timesheetBreak = timesheet?.breakTime || shift.breakTime;
-  // let timesheetNotes = timesheet?.notes || "";
+	// Get status badge
+	function getStatusBadge(status) {
+		switch (status) {
+			case 'confirmed':
+				return { variant: 'success', text: 'Confirmed', icon: CheckCircle2 };
+			case 'pending':
+				return { variant: 'warning', text: 'Pending', icon: Clock };
+			case 'completed':
+				return { variant: 'secondary', text: 'Completed', icon: CheckCircle2 };
+			case 'canceled':
+				return { variant: 'destructive', text: 'Canceled', icon: X };
+			case 'no_show':
+				return { variant: 'destructive', text: 'No Show', icon: X };
+			default:
+				return { variant: 'default', text: status, icon: Info };
+		}
+	}
 
-  // Format a full date (Tuesday, April 15, 2025)
-  function formatFullDate(dateString) {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
+	// Get timesheet status badge
+	function getTimesheetBadge(status) {
+		if (!status) return { variant: 'default', text: 'Not Submitted', icon: AlertCircle };
 
-  // Format time (8:00 AM - 4:00 PM)
-  function formatTimeRange(startTime, endTime) {
-    const formatTime = (time) => {
-      const [hours, minutes] = time.split(':');
-      const hour = parseInt(hours);
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const hour12 = hour % 12 || 12;
-      return `${hour12}:${minutes} ${ampm}`;
-    };
+		switch (status) {
+			case 'draft':
+				return { variant: 'secondary', text: 'Draft', icon: FileText };
+			case 'pending':
+				return { variant: 'warning', text: 'Pending Approval', icon: Clock };
+			case 'approved':
+				return { variant: 'success', text: 'Approved', icon: CheckCircle2 };
+			case 'rejected':
+				return { variant: 'destructive', text: 'Rejected', icon: X };
+			default:
+				return { variant: 'default', text: status, icon: Info };
+		}
+	}
 
-    return `${formatTime(startTime)} - ${formatTime(endTime)}`;
-  }
+	// Calculate hours worked
+	function calculateHoursWorked(start, end, breakMinutes) {
+		const [startHour, startMinute] = start.split(':').map(Number);
+		const [endHour, endMinute] = end.split(':').map(Number);
 
-  // Get status badge
-  function getStatusBadge(status) {
-    switch (status) {
-      case 'confirmed':
-        return { variant: "success", text: "Confirmed", icon: CheckCircle2 };
-      case 'pending':
-        return { variant: "warning", text: "Pending", icon: Clock };
-      case 'completed':
-        return { variant: "secondary", text: "Completed", icon: CheckCircle2 };
-      case 'canceled':
-        return { variant: "destructive", text: "Canceled", icon: X };
-      case 'no_show':
-        return { variant: "destructive", text: "No Show", icon: X };
-      default:
-        return { variant: "default", text: status, icon: Info };
-    }
-  }
+		const startMinutes = startHour * 60 + startMinute;
+		const endMinutes = endHour * 60 + endMinute;
 
-  // Get timesheet status badge
-  function getTimesheetBadge(status) {
-    if (!status) return { variant: "default", text: "Not Submitted", icon: AlertCircle };
-
-    switch (status) {
-      case 'draft':
-        return { variant: "secondary", text: "Draft", icon: FileText };
-      case 'pending':
-        return { variant: "warning", text: "Pending Approval", icon: Clock };
-      case 'approved':
-        return { variant: "success", text: "Approved", icon: CheckCircle2 };
-      case 'rejected':
-        return { variant: "destructive", text: "Rejected", icon: X };
-      default:
-        return { variant: "default", text: status, icon: Info };
-    }
-  }
-
-  // Calculate hours worked
-  function calculateHoursWorked(start, end, breakMinutes) {
-    const [startHour, startMinute] = start.split(':').map(Number);
-    const [endHour, endMinute] = end.split(':').map(Number);
-
-    const startMinutes = startHour * 60 + startMinute;
-    const endMinutes = endHour * 60 + endMinute;
-
-    const totalMinutes = endMinutes - startMinutes - breakMinutes;
-    return Math.max(0, totalMinutes / 60);
-  }
-
-  // Handle timesheet submission
-  // function handleTimesheetSubmit() {
-  //   isSubmitting = true;
-
-  //   // Calculate hours worked
-  //   const hours = calculateHoursWorked(timesheetStartTime, timesheetEndTime, timesheetBreak);
-
-  //   // Here you would submit the timesheet data to your API
-  //   console.log('Submitting timesheet:', {
-  //     shiftId: shift.id,
-  //     startTime: timesheetStartTime,
-  //     endTime: timesheetEndTime,
-  //     breakTime: timesheetBreak,
-  //     hoursWorked: hours,
-  //     notes: timesheetNotes
-  //   });
-
-  //   // Simulate API call
-  //   setTimeout(() => {
-  //     // Update the local timesheet state
-  //     timesheet = {
-  //       id: "ts" + Math.floor(Math.random() * 1000),
-  //       status: "pending",
-  //       dateSubmitted: new Date().toISOString(),
-  //       hoursWorked: hours,
-  //       breakTime: timesheetBreak,
-  //       startTime: timesheetStartTime,
-  //       endTime: timesheetEndTime,
-  //       notes: timesheetNotes,
-  //       feedback: null,
-  //       earnings: hours * shift.hourlyRate
-  //     };
-
-  //     isSubmitting = false;
-  //   }, 1000);
-  // }
-
-  // Handle shift cancellation
-  // function handleCancelShift() {
-  //   isSubmitting = true;
-
-  //   // Here you would submit the cancellation to your API
-  //   console.log('Cancelling shift:', {
-  //     shiftId: shift.id,
-  //     reason: cancelReason
-  //   });
-
-  //   // Simulate API call
-  //   setTimeout(() => {
-  //     // Update the shift status
-  //     shift.status = "canceled";
-  //     isSubmitting = false;
-  //     isCancelDialogOpen = false;
-  //   }, 1000);
-  // }
-
-  const statusBadge = getStatusBadge(data.workday?.recurrenceDay?.status);
-  // const timesheetBadge = timesheet ? getTimesheetBadge(timesheet.status) : getTimesheetBadge(null);
+		const totalMinutes = endMinutes - startMinutes - breakMinutes;
+		return Math.max(0, totalMinutes / 60);
+	}
+	const statusBadge = getStatusBadge(data.workday?.recurrenceDay?.status);
+	// const timesheetBadge = timesheet ? getTimesheetBadge(timesheet.status) : getTimesheetBadge(null);
 </script>
 
 <svelte:head>
-  <title>Shift Details | DentalStaff.US</title>
+	<title>Shift Details | DentalStaff.US</title>
 </svelte:head>
 
 <section class="container mx-auto px-4 py-6 space-y-6">
-  <!-- Back button and status indicator -->
+	<!-- Back button and status indicator -->
 
-    <Button variant="ghost" class="w-fit gap-2" href="/my-shifts">
-      <ArrowLeft class="h-4 w-4" />
-      <span>Back to Shifts</span>
-    </Button>
+	<Button variant="ghost" class="w-fit gap-2" href="/my-shifts">
+		<ArrowLeft class="h-4 w-4" />
+		<span>Back to Shifts</span>
+	</Button>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Main Content -->
-    <div class="md:col-span-2 space-y-6">
-      <!-- Shift Details Card -->
-      <Card>
-        <CardHeader>
-          <CardTitle class="text-2xl">{data.workday.requisition.title}</CardTitle>
-          <CardDescription>{data.workday.requisition.companyName}</CardDescription>
-        </CardHeader>
-        <CardContent class="space-y-6">
-          <!-- Date and Time -->
-          <div class="flex items-start gap-4">
-            <div class="bg-blue-100 rounded-full p-2.5">
-              <CalendarDays class="h-5 w-5 text-blue-700" />
-            </div>
-            <div>
-              <h3 class="font-medium">Date & Time</h3>
-              <p class="text-muted-foreground">{formatFullDate(data.workday.recurrenceDay.date)}</p>
-              <p class="text-muted-foreground">{formatTimeRange(data.workday.recurrenceDay.dayStartTime, data.workday.recurrenceDay.dayEndTime)}</p>
-            </div>
-          </div>
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+		<!-- Main Content -->
+		<div class="md:col-span-2 space-y-6">
+			<!-- Shift Details Card -->
+			<Card>
+				<CardHeader>
+					<CardTitle class="text-2xl">{data.workday.requisition.title}</CardTitle>
+					<CardDescription>{data.workday.requisition.companyName}</CardDescription>
+				</CardHeader>
+				<CardContent class="space-y-6">
+					<!-- Date and Time -->
+					<div class="flex items-start gap-4">
+						<div class="bg-blue-100 rounded-full p-2.5">
+							<CalendarDays class="h-5 w-5 text-blue-700" />
+						</div>
+						<div>
+							<h3 class="font-medium">Date & Time</h3>
+							<p class="text-muted-foreground">{format(data.workday.recurrenceDay.date, 'PP')}</p>
+							<p class="text-muted-foreground">
+								{format(data.workday.recurrenceDay.dayStart, 'hh:mm a')} -{' '}
+								{format(data.workday.recurrenceDay.dayEnd, 'hh:mm a')}
+							</p>
+						</div>
+					</div>
 
-          <!-- Location -->
-          <div class="flex items-start gap-4">
-            <div class="bg-blue-100 rounded-full p-2.5">
-              <MapPin class="h-5 w-5 text-blue-700" />
-            </div>
-            <div>
-              <h3 class="font-medium">{data.workday.location.name}</h3>
-              <p class="text-muted-foreground">{data.workday.location.streetOne} {data.workday.location.streetTwo || ""} {data.workday.location.city}, {data.workday.location.state} {data.workday.location.zipcode}</p>
-            </div>
-          </div>
+					<!-- Location -->
+					<div class="flex items-start gap-4">
+						<div class="bg-blue-100 rounded-full p-2.5">
+							<MapPin class="h-5 w-5 text-blue-700" />
+						</div>
+						<div>
+							<h3 class="font-medium">{data.workday.location.name}</h3>
+							<p class="text-muted-foreground">
+								{data.workday.location.streetOne}
+								{data.workday.location.streetTwo || ''}
+								{data.workday.location.city}, {data.workday.location.state}
+								{data.workday.location.zipcode}
+							</p>
+						</div>
+					</div>
 
-          <!-- Pay Rate -->
-          <div class="flex items-start gap-4">
-            <div class="bg-blue-100 rounded-full p-2.5">
-              <DollarSign class="h-5 w-5 text-blue-700" />
-            </div>
-            <div>
-              <h3 class="font-medium">Hourly Rate</h3>
-              <p class="text-muted-foreground">${data.workday.requisition.hourlyRate.toFixed(2)} per hour</p>
-            </div>
-          </div>
+					<!-- Pay Rate -->
+					<div class="flex items-start gap-4">
+						<div class="bg-blue-100 rounded-full p-2.5">
+							<DollarSign class="h-5 w-5 text-blue-700" />
+						</div>
+						<div>
+							<h3 class="font-medium">Hourly Rate</h3>
+							<p class="text-muted-foreground">
+								${data.workday.requisition.hourlyRate.toFixed(2)} per hour
+							</p>
+						</div>
+					</div>
 
-          <Separator />
+					<Separator />
 
-          <!-- Description -->
-          <div>
-            <h3 class="font-medium mb-2">Job Description</h3>
-            <p class="text-muted-foreground whitespace-pre-wrap">{data.workday.requisition.jobDescription}</p>
-          </div>
+					<!-- Description -->
+					<div>
+						<h3 class="font-medium mb-2">Job Description</h3>
+						<p class="text-muted-foreground whitespace-pre-wrap">
+							{data.workday.requisition.jobDescription}
+						</p>
+					</div>
 
-          <!-- Notes -->
-          {#if data.workday.requisition.specialInstructions}
-            <Alert>
-              <Info class="h-4 w-4" />
-              <AlertTitle>Important Notes</AlertTitle>
-              <AlertDescription class="whitespace-pre-wrap">{data.workday.requisition.specialInstructions}</AlertDescription>
-            </Alert>
-          {/if}
-        </CardContent>
+					<!-- Notes -->
+					{#if data.workday.requisition.specialInstructions}
+						<Alert>
+							<Info class="h-4 w-4" />
+							<AlertTitle>Important Notes</AlertTitle>
+							<AlertDescription class="whitespace-pre-wrap"
+								>{data.workday.requisition.specialInstructions}</AlertDescription
+							>
+						</Alert>
+					{/if}
+				</CardContent>
 
-        <!-- Action buttons for upcoming shifts -->
-        {#if isUpcoming}
-          <CardFooter class="flex flex-wrap gap-3 border-t pt-6">
-            <Button variant="outline" class="gap-2">
-              <Calendar class="h-4 w-4" />
-              <span>Add to Calendar</span>
-            </Button>
+				<!-- Action buttons for upcoming shifts -->
+				{#if isUpcoming}
+					<CardFooter class="flex flex-wrap gap-3 border-t pt-6">
+						<Button variant="outline" class="gap-2">
+							<Calendar class="h-4 w-4" />
+							<span>Add to Calendar</span>
+						</Button>
 
-            <!-- {#if canCancelShift}
-              <Button
-                variant="outline"
-                class="gap-2 border-red-200 text-red-700 hover:bg-red-50"
-                on:click={() => isCancelDialogOpen = true}
-              >
-                <X class="h-4 w-4" />
-                <span>Cancel Shift</span>
-              </Button>
-            {/if} -->
-          </CardFooter>
-        {/if}
-      </Card>
+						{#if canCancelShift}
+							<Button
+								variant="outline"
+								class="gap-2 border-red-200 text-red-700 hover:bg-red-50"
+								on:click={() => (isCancelDialogOpen = true)}
+							>
+								<X class="h-4 w-4" />
+								<span>Cancel Shift</span>
+							</Button>
+						{/if}
+					</CardFooter>
+				{/if}
+			</Card>
 
-      <!-- Timesheet Section -->
-      <!-- {#if isPast || timesheet}
+			<!-- Timesheet Section -->
+			<!-- {#if isPast || timesheet}
         <Card>
           <CardHeader>
             <div class="flex items-center justify-between">
@@ -446,99 +409,101 @@ $: console.log(data)
           </CardContent>
         </Card>
       {/if} -->
-    </div>
+		</div>
 
-    <!-- Sidebar -->
-    <div class="space-y-6">
-      <!-- Client Information -->
-      <Card>
-        <CardHeader>
-          <CardTitle>Client Contact</CardTitle>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="flex items-start gap-3">
-            <Phone class="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <a href={`tel:${data.workday.location.companyPhone}`} class="font-medium">{data.workday.location.companyPhone || "None Provided"}</a>
-              <p class="text-sm text-muted-foreground">Phone</p>
-            </div>
-          </div>
+		<!-- Sidebar -->
+		<div class="space-y-6">
+			<!-- Client Information -->
+			<Card>
+				<CardHeader>
+					<CardTitle>Client Contact</CardTitle>
+				</CardHeader>
+				<CardContent class="space-y-4">
+					<div class="flex items-start gap-3">
+						<Phone class="h-5 w-5 text-muted-foreground mt-0.5" />
+						<div>
+							<a href={`tel:${data.workday.location.companyPhone}`} class="font-medium"
+								>{data.workday.location.companyPhone || 'None Provided'}</a
+							>
+							<p class="text-sm text-muted-foreground">Phone</p>
+						</div>
+					</div>
 
-          <div class="flex items-start gap-3">
-            <Mail class="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p class="font-medium">{data.workday.location.email}</p>
-              <p class="text-sm text-muted-foreground">Email</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+					<div class="flex items-start gap-3">
+						<Mail class="h-5 w-5 text-muted-foreground mt-0.5" />
+						<div>
+							<p class="font-medium">{data.workday.location.email}</p>
+							<p class="text-sm text-muted-foreground">Email</p>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
 
-      <!-- Support Information -->
-      <Card>
-        <CardHeader>
-          <CardTitle>Need Help?</CardTitle>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <p class="text-sm text-muted-foreground">
-            If you have any questions or issues with this shift, our support team is here to help.
-          </p>
+			<!-- Support Information -->
+			<Card>
+				<CardHeader>
+					<CardTitle>Need Help?</CardTitle>
+				</CardHeader>
+				<CardContent class="space-y-4">
+					<p class="text-sm text-muted-foreground">
+						If you have any questions or issues with this shift, our support team is here to help.
+					</p>
 
-          <div class="space-y-2">
-            <Button variant="outline" class="w-full gap-2">
-              <Phone class="h-4 w-4" />
-              <span>Call Support</span>
-            </Button>
+					<div class="space-y-2">
+						<Button variant="outline" class="w-full gap-2">
+							<Phone class="h-4 w-4" />
+							<span>Call Support</span>
+						</Button>
 
-            <Button variant="outline" class="w-full gap-2">
-              <Mail class="h-4 w-4" />
-              <span>Email Support</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  </div>
+						<Button variant="outline" class="w-full gap-2">
+							<Mail class="h-4 w-4" />
+							<span>Email Support</span>
+						</Button>
+					</div>
+				</CardContent>
+			</Card>
+		</div>
+	</div>
 </section>
 
 <!-- Cancel Shift Dialog -->
 <Dialog bind:open={isCancelDialogOpen}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Cancel Shift</DialogTitle>
-      <DialogDescription>
-        Are you sure you want to cancel this shift? This action cannot be undone.
-      </DialogDescription>
-    </DialogHeader>
+	<DialogContent>
+		<DialogHeader>
+			<DialogTitle>Cancel Shift</DialogTitle>
+			<DialogDescription>
+				Are you sure you want to cancel this shift? This action cannot be undone.
+			</DialogDescription>
+		</DialogHeader>
 
-      <Alert variant="destructive">
-        <AlertCircle class="h-4 w-4" />
-        <AlertTitle>Important</AlertTitle>
-        <AlertDescription>
-          Cancellations within 24 hours of the shift may affect your profile rating.
-        </AlertDescription>
-      </Alert>
+		<Alert variant="destructive">
+			<AlertCircle class="h-4 w-4" />
+			<AlertTitle>Important</AlertTitle>
+			<AlertDescription>
+				Cancellations within 24 hours of the shift may affect your profile rating.
+			</AlertDescription>
+		</Alert>
 
-    <DialogFooter>
-      <Button
-        variant="outline"
-        on:click={() => isCancelDialogOpen = false}
-        disabled={isSubmitting}
-      >
-        Keep Shift
-      </Button>
-      <Button
-        variant="destructive"
-        <!-- on:click={handleCancelShift} -->
-        disabled={isSubmitting}
-      >
-        {#if isSubmitting}
-          <span class="animate-spin mr-2">⟳</span>
-          Cancelling...
-        {:else}
-          Confirm Cancellation
-        {/if}
-      </Button>
-    </DialogFooter>
-  </DialogContent>
+		<DialogFooter>
+			<form use:enhance method="POST" action="?/cancelWorkdayShift">
+				<input type="hidden" name="workdayId" value={data.workday.workday.id} />
+				<Button
+					type="button"
+					variant="outline"
+					on:click={() => (isCancelDialogOpen = false)}
+					disabled={isSubmitting}
+				>
+					Keep Shift
+				</Button>
+				<Button type="submit" variant="destructive" disabled={isSubmitting}>
+					{#if isSubmitting}
+						<span class="animate-spin mr-2">⟳</span>
+						Cancelling...
+					{:else}
+						Confirm Cancellation
+					{/if}
+				</Button>
+			</form>
+		</DialogFooter>
+	</DialogContent>
 </Dialog>
