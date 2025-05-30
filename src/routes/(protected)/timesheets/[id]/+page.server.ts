@@ -1,7 +1,8 @@
 import { error, redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, RequestEvent } from './$types';
 import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
+import { setFlash } from 'sveltekit-flash-message/server';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const timesheetId = params.id;
@@ -52,9 +53,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 // Add actions for validating the timesheet if needed
 export const actions = {
-	validateTimesheet: async ({ request, params, locals }) => {
-		const timesheetId = params.id;
-		const { user } = locals;
+	validateTimesheet: async (event: RequestEvent) => {
+		const timesheetId = event.params.id;
+		const { user } = event.locals;
 
 		if (!user) {
 			throw error(401, 'Unauthorized');
@@ -70,19 +71,82 @@ export const actions = {
 					headers: {
 						Authorization: `Bearer ${token}`,
 						'Content-Type': 'application/json'
-					}
+					},
+					body: JSON.stringify({ status: 'PENDING' })
 				}
 			);
 
 			if (!response.ok) {
 				const errorData = await response.json();
+				console.error('Error validating timesheet:', errorData);
+				setFlash(
+					{
+						type: 'error',
+						message: 'Failed to validate timesheet'
+					},
+					event
+				);
 				return { success: false, error: errorData.message };
 			}
-
+			setFlash(
+				{
+					type: 'success',
+					message: 'Timesheet submitted for revalidation'
+				},
+				event
+			);
 			return { success: true };
 		} catch (err) {
 			console.error('Error validating timesheet:', err);
 			return { success: false, error: 'Failed to validate timesheet' };
 		}
+	},
+	cancelTimesheet: async (event: RequestEvent) => {
+		const timesheetId = event.params.id;
+		const { user } = event.locals;
+
+		if (!user) {
+			throw error(401, 'Unauthorized');
+		}
+
+		const token = generateToken(user.id);
+
+		try {
+			const response = await fetch(
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/${timesheetId}/cancel`,
+				{
+					method: 'POST',
+					headers: {
+						Authorization: `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ status: 'VOID' })
+				}
+			);
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				console.error('Error cancelling timesheet:', errorData);
+				setFlash(
+					{
+						type: 'error',
+						message: 'Failed to cancel timesheet'
+					},
+					event
+				);
+				return { success: false, error: errorData.message };
+			}
+			setFlash(
+				{
+					type: 'success',
+					message: 'Timesheet cancelled successfully'
+				},
+				event
+			);
+		} catch (err) {
+			console.error('Error cancelling timesheet:', err);
+			return { success: false, error: 'Failed to cancel timesheet' };
+		}
+		redirect(302, '/timesheets'); // Redirect to timesheets list after cancellation
 	}
 };

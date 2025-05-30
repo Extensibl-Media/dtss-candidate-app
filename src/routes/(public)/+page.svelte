@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { APP_NAME } from '$lib/config/constants';
 	import heroImg from '$lib/assets/hero-img.jpg';
+	import { env } from '$env/dynamic/public';
 </script>
 
 <svelte:head>
@@ -31,18 +32,18 @@
 						<button
 							class="bg-white text-blue-800 font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-50 transition duration-300"
 						>
-							For Dentists
+							Find Talent Now
 						</button>
 						<button
 							class="bg-transparent border-2 border-white text-white font-bold py-3 px-6 rounded-lg hover:bg-white hover:text-blue-800 transition duration-300"
 						>
-							For Job Seekers
+							Find Jobs Now
 						</button>
 					</div>
 				</div>
 				<div class="md:w-1/2">
 					<img
-						src="/api/placeholder/600/400"
+						src="/src/lib/assets/hero-img.jpg"
 						alt="Staffing Services"
 						class="rounded-lg shadow-xl"
 					/>
@@ -51,7 +52,7 @@
 		</div>
 	</section>
 
-	<section id="logos" class="py-12 bg-gray-100">
+	<!-- <section id="logos" class="py-12 bg-gray-100">
 		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 			<p class="text-center text-gray-600 font-medium mb-8">
 				Trusted by industry-leading companies
@@ -77,16 +78,17 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</section> -->
 
 	<section id="why-choose-us" class="py-16 bg-white">
 		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="text-center mb-12">
 				<h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-					Why Choose <span class="text-blue-800">Elite Staffing</span>
+					Why Choose <span class="text-blue-800">DentalStaff United</span>?
 				</h2>
 				<p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-					We bring decades of industry experience and a personalized approach to every placement.
+					We empower the dental industry with tailored staffing solutions that connect professionals
+					and practices, ensuring compliance and quality in every placement.
 				</p>
 			</div>
 
@@ -112,10 +114,11 @@
 							/>
 						</svg>
 					</div>
-					<h3 class="text-xl font-bold text-gray-900 mb-2">Industry Expertise</h3>
+					<h3 class="text-xl font-bold text-gray-900 mb-2">PMA Benefits</h3>
 					<p class="text-gray-600">
-						Our recruiters specialize in specific industries, giving us deeper knowledge of your
-						market's talent landscape.
+						Our ecclesiastic structure provides members with privacy protection and operates under
+						common law principles, creating a trusted environment for professional relationships and
+						business interactions.
 					</p>
 				</div>
 
@@ -140,10 +143,11 @@
 							/>
 						</svg>
 					</div>
-					<h3 class="text-xl font-bold text-gray-900 mb-2">Speed & Efficiency</h3>
+					<h3 class="text-xl font-bold text-gray-900 mb-2">Comprehensive Platform</h3>
 					<p class="text-gray-600">
-						Our advanced matching technology and vast talent network help us fill positions faster
-						than our competitors.
+						From requisition management to automated billing, our platform handles the
+						administrative details so you can focus on what matters most - quality dental care and
+						professional growth.
 					</p>
 				</div>
 
@@ -168,25 +172,27 @@
 							/>
 						</svg>
 					</div>
-					<h3 class="text-xl font-bold text-gray-900 mb-2">Quality Guarantee</h3>
+					<h3 class="text-xl font-bold text-gray-900 mb-2">Dental Industry Expertise</h3>
 					<p class="text-gray-600">
-						We stand behind our placements with industry-leading guarantees and continuous support.
+						Built specifically for the dental industry by professionals who understand your unique
+						staffing challenges and opportunities.
 					</p>
 				</div>
 			</div>
 		</div>
 	</section>
 
-	<section id="clients" class="py-16 bg-gray-50">
+	<section id="business-members" class="py-16 bg-gray-50">
 		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="md:flex md:items-center md:justify-between">
 				<div class="md:w-1/2 mb-8 md:mb-0 md:pr-8">
-					<h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-6">
-						For <span class="text-blue-800">Employers</span>
+					<h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+						For <span class="text-blue-800">Business Members</span>
 					</h2>
+					<p class="text-muted-foreground mb-6">Dental Practices & Organizations</p>
 					<p class="text-xl text-gray-600 mb-6">
-						Access top talent across industries and streamline your hiring process with our
-						comprehensive staffing solutions.
+						Transform how your dental practice manages temporary and permanent staffing needs
+						through our comprehensive platform designed exclusively for our business members.
 					</p>
 					<ul class="space-y-4">
 						<li class="flex">
@@ -204,7 +210,7 @@
 									d="M5 13l4 4L19 7"
 								/>
 							</svg>
-							<span class="text-gray-700">Temporary and contract staffing</span>
+							<span class="text-gray-700">Temporary and Permanent staffing placement</span>
 						</li>
 						<li class="flex">
 							<svg
@@ -221,7 +227,7 @@
 									d="M5 13l4 4L19 7"
 								/>
 							</svg>
-							<span class="text-gray-700">Direct hire and executive search</span>
+							<span class="text-gray-700">Requisition Management Tools</span>
 						</li>
 						<li class="flex">
 							<svg
@@ -238,7 +244,7 @@
 									d="M5 13l4 4L19 7"
 								/>
 							</svg>
-							<span class="text-gray-700">Workforce management solutions</span>
+							<span class="text-gray-700">Automatic Billing & Invoicing</span>
 						</li>
 						<li class="flex">
 							<svg
@@ -257,12 +263,46 @@
 							</svg>
 							<span class="text-gray-700">Payroll and compliance services</span>
 						</li>
+						<li class="flex">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-6 w-6 text-blue-800 mr-2"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+							<span class="text-gray-700">Timesheet Management</span>
+						</li>
+						<li class="flex">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-6 w-6 text-blue-800 mr-2"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+							<span class="text-gray-700">Location & Staff Management</span>
+						</li>
 					</ul>
-					<button
-						class="mt-8 bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300"
+					<Button
+						href="https://app.dentalstaff.us/auth/sign-up"
+						variant="default"
+						class="bg-blue-800 hover:bg-blue-900 mt-8">Hire Talent Now</Button
 					>
-						Hire Talent Now
-					</button>
 				</div>
 				<div class="md:w-1/2">
 					<img
@@ -275,16 +315,17 @@
 		</div>
 	</section>
 
-	<section id="candidates" class="py-16 bg-white">
+	<section id="professional-members" class="py-16 bg-white">
 		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="md:flex md:items-center md:justify-between">
 				<div class="md:w-1/2 md:order-2 mb-8 md:mb-0 md:pl-8">
-					<h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-6">
-						For <span class="text-blue-800">Job Seekers</span>
+					<h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+						For <span class="text-blue-800">Professional Members</span>
 					</h2>
+					<p class="text-muted-foreground mb-6">Dental Staff & Professionals</p>
 					<p class="text-xl text-gray-600 mb-6">
-						Find your dream job with personalized career guidance and exclusive access to top
-						opportunities.
+						Join a private association of dental professionals where you control your schedule,
+						choose your assignments, and connect with practices that value your expertise.
 					</p>
 					<ul class="space-y-4">
 						<li class="flex">
@@ -302,7 +343,7 @@
 									d="M5 13l4 4L19 7"
 								/>
 							</svg>
-							<span class="text-gray-700">Access to hidden job opportunities</span>
+							<span class="text-gray-700">Flexible Opportunities</span>
 						</li>
 						<li class="flex">
 							<svg
@@ -319,7 +360,7 @@
 									d="M5 13l4 4L19 7"
 								/>
 							</svg>
-							<span class="text-gray-700">Resume and interview preparation</span>
+							<span class="text-gray-700">Simplified Operations</span>
 						</li>
 						<li class="flex">
 							<svg
@@ -336,7 +377,7 @@
 									d="M5 13l4 4L19 7"
 								/>
 							</svg>
-							<span class="text-gray-700">Career coaching and skill development</span>
+							<span class="text-gray-700">Professional Community</span>
 						</li>
 						<li class="flex">
 							<svg
@@ -353,14 +394,12 @@
 									d="M5 13l4 4L19 7"
 								/>
 							</svg>
-							<span class="text-gray-700">Competitive benefits and perks</span>
+							<span class="text-gray-700">Streamlined payment processes</span>
 						</li>
 					</ul>
-					<button
-						class="mt-8 bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300"
+					<Button href="/auth/sign-up" variant="default" class="bg-blue-800 hover:bg-blue-900 mt-8"
+						>Find Jobs Now</Button
 					>
-						Find Jobs Now
-					</button>
 				</div>
 				<div class="md:w-1/2 md:order-1">
 					<img
@@ -373,7 +412,7 @@
 		</div>
 	</section>
 
-	<section id="testimonials" class="py-16 bg-gray-50">
+	<!-- <section id="testimonials" class="py-16 bg-gray-50">
 		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="text-center mb-12">
 				<h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
@@ -385,7 +424,6 @@
 			</div>
 
 			<div class="grid md:grid-cols-3 gap-8">
-				<!-- Testimonial 1 -->
 				<div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition duration-300">
 					<div class="flex items-center mb-4">
 						<div class="text-yellow-400 flex">
@@ -454,7 +492,6 @@
 					</div>
 				</div>
 
-				<!-- Testimonial 2 -->
 				<div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition duration-300">
 					<div class="flex items-center mb-4">
 						<div class="text-yellow-400 flex">
@@ -523,7 +560,6 @@
 					</div>
 				</div>
 
-				<!-- Testimonial 3 -->
 				<div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition duration-300">
 					<div class="flex items-center mb-4">
 						<div class="text-yellow-400 flex">
@@ -594,7 +630,7 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</section> -->
 
 	<section id="cta" class="py-16 bg-gradient-to-r from-blue-800 to-blue-900 text-white">
 		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -625,7 +661,7 @@
 	</section>
 
 	<!-- Stats Section -->
-	<section id="stats" class="py-16 bg-white">
+	<!-- <section id="stats" class="py-16 bg-white">
 		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="text-center mb-12">
 				<h2 class="text-3xl font-extrabold text-gray-900">Our Track Record</h2>
@@ -656,11 +692,11 @@
 				</div>
 			</div>
 		</div>
-	</section>
+	</section> -->
 
 	<!-- Contact Form Section -->
 	<section id="contact" class="py-20 bg-white">
-		<div class="container mx-auto">
+		<div class="container mx-auto px-4">
 			<div class="flex flex-col md:flex-row">
 				<!-- Left Side - Content -->
 				<div
@@ -686,38 +722,12 @@
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									stroke-width="2"
-									d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-								/>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-								/>
-							</svg>
-							<div>
-								<h3 class="font-semibold text-blue-300">Location</h3>
-								<p class="mt-1">123 Business Avenue, Suite 500<br />New York, NY 10001</p>
-							</div>
-						</div>
-						<div class="flex items-start">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								class="h-6 w-6 mr-3 text-blue-300"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
 									d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
 								/>
 							</svg>
 							<div>
 								<h3 class="font-semibold text-blue-300">Email</h3>
-								<p class="mt-1">contact@elitestaffing.com</p>
+								<p class="mt-1">info@dentalstaff.us</p>
 							</div>
 						</div>
 						<div class="flex items-start">
@@ -737,14 +747,14 @@
 							</svg>
 							<div>
 								<h3 class="font-semibold text-blue-300">Phone</h3>
-								<p class="mt-1">(212) 555-7890</p>
+								<!-- <p class="mt-1">(212) 555-7890</p> -->
 							</div>
 						</div>
 					</div>
 				</div>
 
 				<!-- Right Side - Form -->
-				<div class="w-full md:w-1/2 p-12 md:p-16 lg:p-20 bg-white flex flex-col justify-center">
+				<div class="w-full md:w-1/2 md:p-16 lg:p-20 bg-white flex flex-col justify-center">
 					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Get in Touch</h3>
 					<form class="space-y-6">
 						<div>
@@ -800,7 +810,15 @@
 					<div class="text-xl font-bold mb-4">
 						DentalStaff<span class="text-blue-400">.US</span>
 					</div>
-					<p class="text-gray-400 mb-4">Connecting talent with opportunity since 2010.</p>
+					<p class="text-gray-400 mb-4">
+						DentalStaff.US is the property of DentalStaff United a Private Member Association (PMA),
+						managed by:
+					</p>
+					<div class="mb-4">
+						<p class="text-gray-400 mb-1">Blue Water Business Associates, LLC</p>
+						<p class="text-gray-400 mb-1">411 N 6 th Street #7228</p>
+						<p class="text-gray-400 mb-1">Emery, SD 57332</p>
+					</div>
 					<div class="flex space-x-4">
 						<a href={null} class="text-gray-400 hover:text-white">
 							<span class="sr-only">Facebook</span>
@@ -836,10 +854,15 @@
 				<!-- For Employers -->
 				<div>
 					<h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
-						For Employers
+						For Business Members
 					</h3>
 					<ul class="space-y-3">
-						<li><a href={null} class="text-gray-400 hover:text-white">Client Login</a></li>
+						<li>
+							<a
+								href={`${env.PUBLIC_CLIENT_APP_DOMAIN}/auth/sign-in`}
+								class="text-gray-400 hover:text-white cursor-pointer">Business Member Portal</a
+							>
+						</li>
 						<!-- <li><a href={null} class="text-gray-400 hover:text-white">Staffing Services</a></li>
               <li><a href={null} class="text-gray-400 hover:text-white">Executive Search</a></li>
               <li><a href={null} class="text-gray-400 hover:text-white">Industries</a></li>
@@ -850,10 +873,17 @@
 				<!-- For Job Seekers -->
 				<div>
 					<h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
-						For Job Seekers
+						For Professional Members
 					</h3>
 					<ul class="space-y-3">
-						<li><a href={null} class="text-gray-400 hover:text-white">Browse Jobs</a></li>
+						<li>
+							<a href={null} class="text-gray-400 hover:text-white cursor-pointer">Browse Jobs</a>
+						</li>
+						<li>
+							<a href={'/augh/sign-in'} class="text-gray-400 hover:text-white cursor-pointer"
+								>Professional Member Portal</a
+							>
+						</li>
 					</ul>
 				</div>
 
@@ -861,8 +891,12 @@
 				<div>
 					<h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Company</h3>
 					<ul class="space-y-3">
-						<li><a href={null} class="text-gray-400 hover:text-white">About Us</a></li>
-						<li><a href={null} class="text-gray-400 hover:text-white">Contact Us</a></li>
+						<li>
+							<a href={null} class="text-gray-400 hover:text-white cursor-pointer">About Us</a>
+						</li>
+						<li>
+							<a href={null} class="text-gray-400 hover:text-white cursor-pointer">Contact Us</a>
+						</li>
 					</ul>
 				</div>
 			</div>

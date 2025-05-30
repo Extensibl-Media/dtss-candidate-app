@@ -40,11 +40,13 @@
 		AlertDialogDescription,
 		AlertDialogFooter
 	} from '$lib/components/ui/alert-dialog';
+	import { enhance } from '$app/forms';
 	// import { onMount } from 'svelte';
 
 	export let data: PageData;
 
 	let cancelDialogOpen = false;
+	let verifyDialogOpen = false;
 
 	$: timesheet = data.timesheet;
 	$: requisition = data.requisition;
@@ -299,7 +301,7 @@
 											<div>
 												<p class="font-medium">{formatFullDate(entry.date)}</p>
 												<p class="text-sm text-muted-foreground">
-													{formatTimeRange(entry.startTime, entry.endTime)}
+													{format(entry.startTime, 'hh:mm a')} - {format(entry.endTime, 'hh:mm a')}
 												</p>
 											</div>
 											<div class="text-right">
@@ -437,25 +439,50 @@
 					</p>
 
 					<div class="space-y-2">
-						{#if !timesheet?.validated}
-							<Button
-								disabled={timesheet.status === 'APPROVED' ||
-									timesheet.status === 'PENDING' ||
-									timesheet.status === 'VOID'}
-								class="w-full gap-2 bg-blue-700 hover:bg-blue-800"
-							>
-								<CheckCircle2 class="h-4 w-4" />
-								<span>Validate Timesheet</span>
-							</Button>
-						{/if}
+						<AlertDialog open={verifyDialogOpen}>
+							<AlertDialogTrigger asChild>
+								<Button
+									disabled={timesheet.status === 'APPROVED' ||
+										timesheet.status === 'PENDING' ||
+										timesheet.status === 'VOID'}
+									class="w-full gap-2 bg-blue-700 hover:bg-blue-800"
+									on:click={() => (verifyDialogOpen = true)}
+								>
+									<CheckCircle2 class="h-4 w-4" />
+									<span>Validate Timesheet</span>
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Validate Timesheet</AlertDialogTitle>
+									<AlertDialogDescription>
+										Submitting this timesheet for validation states that the hours submitted have
+										been reviewed and/or properly amended.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<Button variant="outline" on:click={() => (verifyDialogOpen = false)}
+										>Cancel</Button
+									>
+									<form action="?/validateTimesheet" method="POST" use:enhance>
+										<Button
+											type="submit"
+											on:click={() => (verifyDialogOpen = false)}
+											variant="default"
+											class="ml-2 bg-green-400 hover:bg-green-500 text-white">Validate</Button
+										>
+									</form>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
 
 						<AlertDialog open={cancelDialogOpen}>
 							<AlertDialogTrigger asChild>
 								<Button
 									on:click={() => (cancelDialogOpen = true)}
 									disabled={timesheet.status === 'APPROVED'}
-									variant="destructive"
-									class="w-full gap-2"
+									variant="outline"
+									class="w-full border-red-200 text-red-700 hover:bg-red-50 gap-2"
 								>
 									<XCircle class="h-4 w-4" />
 									<span>Cancel Timesheet</span>
@@ -465,14 +492,22 @@
 								<AlertDialogHeader>
 									<AlertDialogTitle>Are you sure?</AlertDialogTitle>
 									<AlertDialogDescription>
-										This action cannot be undone. This timesheet will be marked as rejected.
+										This action cannot be undone. This timesheet will be deleted permanently.
 									</AlertDialogDescription>
 								</AlertDialogHeader>
 								<AlertDialogFooter>
 									<Button variant="outline" on:click={() => (cancelDialogOpen = false)}
 										>Cancel</Button
 									>
-									<Button variant="destructive" class="ml-2">Reject</Button>
+									<form action="?/cancelTimesheet" method="POST" use:enhance>
+										<Button
+											type="submit"
+											on:click={() => (cancelDialogOpen = false)}
+											disabled={timesheet.status === 'APPROVED'}
+											variant="destructive"
+											class="ml-2">Reject</Button
+										>
+									</form>
 								</AlertDialogFooter>
 							</AlertDialogContent>
 						</AlertDialog>
