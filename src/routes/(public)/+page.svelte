@@ -42,11 +42,7 @@
 					</div>
 				</div>
 				<div class="md:w-1/2">
-					<img
-						src="/src/lib/assets/hero-img.jpg"
-						alt="Staffing Services"
-						class="rounded-lg shadow-xl"
-					/>
+					<img src={heroImg} alt="Staffing Services" class="rounded-lg shadow-xl" />
 				</div>
 			</div>
 		</div>
