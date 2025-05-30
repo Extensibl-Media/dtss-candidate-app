@@ -306,7 +306,6 @@
 								<th class="text-left py-3 px-4 font-medium">Position</th>
 								<th class="text-left py-3 px-4 font-medium">Client</th>
 								<th class="text-left py-3 px-4 font-medium">Hours</th>
-								<th class="text-left py-3 px-4 font-medium">Status</th>
 								<th class="text-left py-3 px-4 font-medium">Timesheet</th>
 								<th class="text-right py-3 px-4 font-medium">Actions</th>
 							</tr>
@@ -336,31 +335,20 @@
 										</div>
 									</td>
 
+									<td class="py-4 px-4"> </td>
 									<td class="py-4 px-4">
-										<!-- {#if shift.timesheet}
-                      <div class="font-medium">{shift.timesheet.hoursWorked} hrs</div>
-                      <div class="text-xs text-muted-foreground">
-                        ${shift.timesheet.earnings.toFixed(2)}
-                      </div>
-                    {:else}
-                      <span class="text-muted-foreground">-</span>
-                    {/if} -->
+										{#if shift.timesheet}
+											<Button
+												variant="outline"
+												href={`/timesheets/${shift.timesheet?.id}`}
+												size="sm">View Timesheet</Button
+											>
+										{:else}
+											<Button variant="outline" href="/timesheets/new" size="sm"
+												>Create Timesheet</Button
+											>
+										{/if}
 									</td>
-
-									<td class="py-4 px-4">
-										<Badge variant="default" class={statusBadge.class}>
-											<svelte:component this={statusBadge.icon} class="h-3 w-3 mr-1" />
-											{statusBadge.text}
-										</Badge>
-									</td>
-
-									<td class="py-4 px-4">
-										<!-- <Badge variant={timesheetBadge.variant}>
-                      <svelte:component this={timesheetBadge.icon} class="h-3 w-3 mr-1" />
-                      {timesheetBadge.text}
-                    </Badge> -->
-									</td>
-
 									<td class="py-4 px-4 text-right">
 										<Button variant="outline" size="sm" href={`/my-shifts/${shift.workday.id}`}>
 											View Details
