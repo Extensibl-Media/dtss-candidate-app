@@ -6,7 +6,9 @@ import { lucia } from '$lib/server/lucia';
 import { createUser } from '$lib/server/database/user-model';
 
 import { userSchema } from '$lib/config/zod-schemas';
-import { sendVerificationEmail } from '$lib/config/email-messages';
+import { EmailService } from '$lib/server/email/emailService';
+import type { PageServerLoad, PageServerLoadEvent, RequestEvent } from './$types';
+// import { sendVerificationEmail } from '$lib/config/email-messages';
 
 const signUpSchema = userSchema.pick({
 	firstName: true,
@@ -16,7 +18,7 @@ const signUpSchema = userSchema.pick({
 	terms: true
 });
 
-export const load = async (event) => {
+export const load: PageServerLoad = async (event: PageServerLoadEvent) => {
 	if (event.locals.user) {
 		redirect(302, '/dashboard');
 	}
@@ -27,7 +29,7 @@ export const load = async (event) => {
 };
 
 export const actions = {
-	default: async (event) => {
+	default: async (event: RequestEvent) => {
 		const form = await superValidate(event, signUpSchema);
 		//console.log(form);
 
@@ -38,6 +40,7 @@ export const actions = {
 		}
 
 		try {
+			const emailService = new EmailService();
 			const password = await new Argon2id().hash(form.data.password);
 			const token = crypto.randomUUID();
 			const id = crypto.randomUUID();
@@ -52,11 +55,13 @@ export const actions = {
 				receiveEmail: true,
 				token: token,
 				createdAt: new Date(),
-				updatedAt: new Date()
+				updatedAt: new Date(),
+				timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
 			};
 			const newUser = await createUser(user);
 			if (newUser) {
-				await sendVerificationEmail(newUser.email, token);
+				// await sendVerificationEmail(newUser.email, token);
+				await emailService.sendVerificationEmail(newUser.email, token);
 				const session = await lucia.createSession(newUser.id, {});
 				const sessionCookie = lucia.createSessionCookie(session.id);
 				event.cookies.set(sessionCookie.name, sessionCookie.value, {

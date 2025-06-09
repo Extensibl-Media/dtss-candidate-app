@@ -64,6 +64,7 @@ export const actions = {
 
 		const token = generateToken(userId);
 		const form = await superValidate(event, messageSchema);
+		const { id } = event.params;
 
 		if (!form.valid) {
 			return fail(400, { form });
@@ -71,7 +72,7 @@ export const actions = {
 		console.log({ finalData: form.data });
 		try {
 			const response = await fetch(
-				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/inbox/sendMessage/${event.params.id}`,
+				`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/inbox/sendMessage/${id}`,
 				{
 					method: 'POST',
 					headers: {

@@ -7,7 +7,7 @@
 	import { toast } from 'svelte-sonner';
 	import { ProgressBar } from '@prgm/sveltekit-progress-bar';
 	import Navigation from '$lib/components/navigation/navigation.svelte';
-import {ModeWatcher} from 'mode-watcher'
+	import { ModeWatcher } from 'mode-watcher';
 	export let data: PageData;
 	let user: PageData['user'];
 	$: user = data.user;
@@ -26,14 +26,14 @@ import {ModeWatcher} from 'mode-watcher'
 		}
 	}
 	import { setMode } from 'mode-watcher';
-	setMode("light");
+	setMode('light');
 </script>
 
 <ModeWatcher />
 <Toaster richColors />
-<div class="relative flex min-h-screen flex-col">
+<div class="relative flex h-screen flex-col">
 	<Navigation {user} />
-	<div class="py-8 md:py-12 grow flex flex-col" id="app-main">
+	<div class="py-8 md:py-12 grow flex flex-col h-full overflow-scroll" id="app-main">
 		<ProgressBar class="text-blue-500" zIndex={100} />
 		<slot />
 	</div>

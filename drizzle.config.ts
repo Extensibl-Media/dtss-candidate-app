@@ -1,16 +1,14 @@
-// drizzle.config.ts
-import type { Config } from 'drizzle-kit';
+// import { DATABASE_URL } from '$env/static/private';
 import * as dotenv from 'dotenv';
 dotenv.config();
-const { DATABASE_URL } = process.env;
-if (!DATABASE_URL) {
-	throw new Error('No url');
-}
-export default {
-	schema: './src/lib/server/database/drizzle-schemas.ts',
-	out: './src/lib/server/database/migrations',
-	driver: 'pg',
-	dbCredentials: {
-		connectionString: DATABASE_URL
-	}
-} satisfies Config;
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
+const pool = new pg.Pool({
+	connectionString: process.env.DATABASE_URL
+	// connectionString: DATABASE_URL
+});
+
+await pool.connect();
+const db = drizzle(pool);
+
+export default db;

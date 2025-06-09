@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 // import { userSchema } from '$lib/config/zod-schemas';
-import { updateEmailAddressSuccessEmail } from '$lib/config/email-messages';
-import { updateUser } from '$lib/server/database/user-model.js';
+// import { updateEmailAddressSuccessEmail } from '$lib/config/email-messages';
+// import { updateUser } from '$lib/server/database/user-model.js';
 
 export const load = async (event) => {
 	const user = event.locals.user;

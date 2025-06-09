@@ -7,6 +7,8 @@ import { generateToken } from '$lib/server/utils';
 import { STATES } from '$lib/config/constants';
 import { format } from 'date-fns';
 import { setFlash } from 'sveltekit-flash-message/server';
+import { updateUser } from '$lib/server/database/user-model';
+import { EmailService } from '$lib/server/email/emailService';
 
 export const load: PageServerLoad = async (event) => {
 	const { user } = event.locals;
@@ -116,6 +118,8 @@ export const actions: Actions = {
 		const token = generateToken(userId);
 		const form = await superValidate(event, updateProfileSchema);
 
+		const emailService = new EmailService();
+
 		if (!form.valid) {
 			return fail(400, { form });
 		}
@@ -165,6 +169,12 @@ export const actions: Actions = {
 					throw error(401, 'Authentication failed');
 				}
 				throw error(500, 'Failed to update avatar');
+			}
+
+			if (userData.email && user.email !== userData.email) {
+				await emailService.sendEmailAddressUpdateSuccessEmail(userData.email, user?.token);
+				await emailService.sendPossibleHijackEmail(userData.email, user.email);
+				await updateUser(user.id, { verified: false });
 			}
 
 			setFlash({ type: 'success', message: 'Profile updated Successfully' }, event);

@@ -49,10 +49,10 @@
 </script>
 
 <svelte:head>
-  <title>Conversation | DentalStaff.US</title>
+	<title>Conversation | DentalStaff.US</title>
 </svelte:head>
 
-<section class="container flex flex-col gap-6 max-w-2xl flex-grow px-4">
+<section class="container flex flex-col gap-6 max-w-2xl grow px-4">
 	<div class="flex items-center gap-4" id="container">
 		<Button on:click={goBack} variant="ghost"><ArrowLeft /></Button>
 		{#if conversation.type === 'APPLICATION'}
@@ -71,11 +71,11 @@
 			</div>
 		{/if}
 	</div>
-	<div class="grow overflow-x-scroll flex flex-col gap-4 py-4">
+	<div class="grow overflow-x-scroll max-h-[5 hybny00px] flex flex-col gap-4 py-4">
 		{#each messages as message}
 			{#if message.senderId === user.id}
 				<div class="self-end ml-auto flex flex-row-reverse gap-2 max-w-sm sm:max-w-md">
-					<div class="p-2 rounded-lg rounded-tr-none bg-blue-400 text-white">
+					<div class="p-2 rounded-lg rounded-tr-none bg-blue-500 text-white">
 						{message.body}
 					</div>
 				</div>

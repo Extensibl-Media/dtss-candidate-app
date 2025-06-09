@@ -335,7 +335,7 @@
 										</div>
 									</td>
 
-									<td class="py-4 px-4"> </td>
+									<td class="py-4 px-4">{shift.timesheet.totalHoursWorked}</td>
 									<td class="py-4 px-4">
 										{#if shift.timesheet}
 											<Button
