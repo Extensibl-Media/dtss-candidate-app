@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-  <title>Permanent Jobs | DentalStaff.US</title>
+	<title>Permanent Jobs | DentalStaff.US</title>
 </svelte:head>
 
 <section class="container grid items-center gap-6 px-4">
@@ -22,7 +22,7 @@
 		<Tabs.List class="gap-6">
 			<Tabs.Trigger value="Recommended">Recommended</Tabs.Trigger>
 			<Tabs.Trigger value="Applied">Applied</Tabs.Trigger>
-			<Tabs.Trigger value="Saved">Saved</Tabs.Trigger>
+			<!-- <Tabs.Trigger value="Saved">Saved</Tabs.Trigger> -->
 		</Tabs.List>
 		<Tabs.Content value="Recommended">
 			<div class="grid grid-cols-6 gap-8 mt-8">
@@ -33,9 +33,9 @@
 							<div class="flex flex-col gap-4 w-full">
 								<div class="flex justify-between items-start">
 									<img alt="" class="h-24 w-24 rounded-md" src={opening.company.companyLogo} />
-									<div class="hover:bg-gray-100 rounded-sm flex items-center justify-center p-2">
+									<!-- <div class="hover:bg-gray-100 rounded-sm flex items-center justify-center p-2">
 										<Heart class="text-black" />
-									</div>
+									</div> -->
 								</div>
 								<div>
 									<p class="font-semibold text-2xl">{opening.title}</p>
@@ -81,9 +81,9 @@
 										class="h-24 w-24 rounded-md"
 										src={appliedOpening?.company.companyLogo}
 									/>
-									<div class="hover:bg-gray-100 rounded-sm flex items-center justify-center p-2">
+									<!-- <div class="hover:bg-gray-100 rounded-sm flex items-center justify-center p-2">
 										<Heart class="text-black" />
-									</div>
+									</div> -->
 								</div>
 								<div>
 									<p class="font-semibold text-2xl">{appliedOpening?.title}</p>
@@ -108,7 +108,7 @@
 									</p>
 								</div>
 							</div>
-							<a class="w-full" href={`/jobs/${appliedOpening?.id}`}
+							<a class="w-full" href={`/permanent/${appliedOpening?.id}`}
 								><Button class="w-full bg-blue-900 text-white hover:bg-blue-800">
 									View Opening
 								</Button></a

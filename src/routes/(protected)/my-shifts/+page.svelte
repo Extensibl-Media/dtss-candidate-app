@@ -76,8 +76,6 @@
 				: b.recurrenceDay.dayStart.localeCompare(a.recurrenceDay.dayStart);
 		};
 
-	console.log({ monthOptions });
-
 	$: workdays = data.workdays;
 
 	$: todayStr = new Date().toISOString();

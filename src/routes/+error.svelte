@@ -1,25 +1,36 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { Button } from '$lib/components/ui/button';
 </script>
-
-<svelte:head>
-  <title>Error | DentalStaff.US</title>
-</svelte:head>
 
 <section class="container grid items-center gap-6">
 	<div class="flex max-w-[980px] flex-col items-start gap-2">
 		{#if $page.status === 404}
-			<h1 class="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
-				Page Not Found.
-			</h1>
-			<p class="max-w-[700px] text-lg text-muted-foreground">
-				<a href="/" class="underline">Go Home</a>
-			</p>
+			<div
+				class="w-full min-h-screen flex flex-col gap-4 items-center justify-center py-12 text-center"
+			>
+				<h1 class="text-6xl md:text-8xl">404</h1>
+				<p class="text-lg md:text-xl">Page Not Found</p>
+				<p class="text-muted-foreground text-sm">
+					We apologize, the page you were looking for could not be found at this time.
+				</p>
+				<Button on:click={() => window.history.back()} class="bg-blue-800 hover:bg-blue-900"
+					>Go Back</Button
+				>
+			</div>
 		{:else}
-			<h1 class="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
-				Unexpected Error
-			</h1>
-			<p class="max-w-[700px] text-lg text-muted-foreground">We're investigating the issue.</p>
+			<div
+				class="w-full min-h-screen flex flex-col gap-4 items-center justify-center py-12 text-center"
+			>
+				<h1 class="text-6xl md:text-8xl">{$page.status}</h1>
+				<p class="text-lg md:text-xl">Internal Server Error</p>
+				<p class="text-muted-foreground text-sm">
+					We apologize for the inconvenience, and are investigating the issue.
+				</p>
+				<Button on:click={() => window.history.back()} class="bg-blue-800 hover:bg-blue-900"
+					>Go Back</Button
+				>
+			</div>
 		{/if}
 
 		{#if $page.error?.errorId}

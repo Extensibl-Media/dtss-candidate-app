@@ -859,10 +859,6 @@
 								class="text-gray-400 hover:text-white cursor-pointer">Business Member Portal</a
 							>
 						</li>
-						<!-- <li><a href={null} class="text-gray-400 hover:text-white">Staffing Services</a></li>
-              <li><a href={null} class="text-gray-400 hover:text-white">Executive Search</a></li>
-              <li><a href={null} class="text-gray-400 hover:text-white">Industries</a></li>
-              <li><a href={null} class="text-gray-400 hover:text-white">Client Success Stories</a></li> -->
 					</ul>
 				</div>
 
@@ -872,9 +868,9 @@
 						For Professional Members
 					</h3>
 					<ul class="space-y-3">
-						<li>
+						<!-- <li>
 							<a href={null} class="text-gray-400 hover:text-white cursor-pointer">Browse Jobs</a>
-						</li>
+						</li> -->
 						<li>
 							<a href={'/augh/sign-in'} class="text-gray-400 hover:text-white cursor-pointer"
 								>Professional Member Portal</a
@@ -883,9 +879,11 @@
 					</ul>
 				</div>
 
-				<!-- Company -->
+				<!-- Quick Links -->
 				<div>
-					<h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Company</h3>
+					<h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
+						Quick Links
+					</h3>
 					<ul class="space-y-3">
 						<li>
 							<a href={null} class="text-gray-400 hover:text-white cursor-pointer">About Us</a>
