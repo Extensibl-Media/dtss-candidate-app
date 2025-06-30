@@ -97,10 +97,10 @@
 				{:else}
 					<a
 						class="flex items-center text-sm font-medium text-blue-800"
-						href="/#professional-members">For Professional Members</a
+						href="/#professional-members">For Professionals</a
 					>
 					<a class="flex items-center text-sm font-medium text-blue-800" href="/#business-members"
-						>For Business Members</a
+						>For Businesses</a
 					>
 					<a
 						class="flex items-center text-sm font-medium text-blue-800"
@@ -160,7 +160,7 @@
 					<Menu class="h-[1.2rem] w-[1.2rem] text-blue-800" />
 				</Button>
 				<Drawer
-					class="bg-white -left-2 flex flex-col w-full max-w-[400px]"
+					class="bg-white -left-4 flex flex-col w-full max-w-[400px]"
 					transitionType="fly"
 					{transitionParams}
 					bind:hidden
@@ -230,20 +230,31 @@
 								<SidebarGroup class="flex-1">
 									<SidebarItem
 										on:click={() => (hidden = true)}
-										label="For Candidates"
-										href="/#candidates"
+										label="For Professionals"
+										href="/#professional-members"
 									></SidebarItem>
 									<SidebarItem
 										on:click={() => (hidden = true)}
-										label="For Dentists"
-										href="/#dentists"
+										label="For Businesses"
+										href="/#business-members"
 									></SidebarItem>
 									<SidebarItem on:click={() => (hidden = true)} label="Contact Us" href="/#contact"
 									></SidebarItem>
 									<SidebarItem on:click={() => (hidden = true)} label="About Us" href="/about-us"
 									></SidebarItem>
-									<SidebarItem on:click={() => (hidden = true)} label="Job Search" href="/job-board"
-									></SidebarItem>
+									<div class="flex flex-col gap-4 w-full">
+										<Button
+											class="bg-blue-800 hover:bg-blue-900"
+											href={`/auth/sign-up`}
+											on:click={() => (hidden = true)}>Get Started</Button
+										>
+										<Button
+											variant="outline"
+											class="text-blue-800"
+											href="/auth/sign-in"
+											on:click={() => (hidden = true)}>Sign in</Button
+										>
+									</div>
 								</SidebarGroup>
 							{/if}
 						</SidebarWrapper>
