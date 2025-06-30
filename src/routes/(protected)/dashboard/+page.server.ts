@@ -19,16 +19,19 @@ export const load = async (event) => {
 		fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getUpcomingWorkdaysForCandidate`, {
 			method: 'GET',
 			headers: { Authorization: `Bearer ${token}` }
-		}).then((res) => {
+		}).then(async (res) => {
 			if (!res.ok) throw new Error(`Workdays API failed: ${res.status}`);
+			console.log(await res.json());
+
 			return res.json();
 		}),
 
 		fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/getPendingTimesheetsForUser`, {
 			method: 'GET',
 			headers: { Authorization: `Bearer ${token}` }
-		}).then((res) => {
+		}).then(async (res) => {
 			if (!res.ok) throw new Error(`Timesheets API failed: ${res.status}`);
+			console.log(await res.json());
 			return res.json();
 		})
 	]);
