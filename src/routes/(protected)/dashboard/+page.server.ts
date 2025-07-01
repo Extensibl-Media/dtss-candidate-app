@@ -21,9 +21,9 @@ export const load = async (event) => {
 			headers: { Authorization: `Bearer ${token}` }
 		}).then(async (res) => {
 			if (!res.ok) throw new Error(`Workdays API failed: ${res.status}`);
-			console.log(await res.json());
-
-			return res.json();
+			const result = await res.json();
+			// console.log(result);
+			return result;
 		}),
 
 		fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/timesheets/getPendingTimesheetsForUser`, {
@@ -31,12 +31,12 @@ export const load = async (event) => {
 			headers: { Authorization: `Bearer ${token}` }
 		}).then(async (res) => {
 			if (!res.ok) throw new Error(`Timesheets API failed: ${res.status}`);
-			console.log(await res.json());
-			return res.json();
+			const result = await res.json();
+			// console.log(result);
+			return result;
 		})
 	]);
 
-	console.log(timesheets.data);
 	return {
 		user,
 		workdays: workdays.data,
