@@ -19,42 +19,11 @@ export const load: PageServerLoad = async (event) => {
 		redirect(302, '/onboarding/experience');
 	}
 
-	const userId = user.id;
-
-	const token = generateToken(userId);
-
-	const profileReq = await fetch(`${PUBLIC_CLIENT_APP_DOMAIN}/api/external/getCandidateProfile`, {
-		method: 'GET',
-		headers: { Authorization: `Bearer ${token}` }
-	});
-
-	if (!profileReq.ok) {
-		if (profileReq.status === 401) {
-			throw error(401, 'Authentication failed');
-		}
-		throw error(profileReq.status, 'Failed to fetch profile');
-	}
-
-	const profile = await profileReq.json();
-
-	const form = await superValidate(
-		{
-			...profile,
-			birthday: format(new Date(profile.birthday), 'yyyy-MM-dd'),
-			address: profile.address || '',
-			state:
-				profile.state?.length > 0
-					? STATES.find(
-							(state) => state.name == profile.state || state.abbreviation === profile.state
-						)?.abbreviation
-					: ''
-		},
-		newProfileSchema
-	);
+	const form = await superValidate(event, newProfileSchema);
 
 	const avatarForm = await superValidate(event, avatarUrlSchema);
 
-	return { user, form, profile, avatarForm };
+	return { user, form, avatarForm };
 };
 
 export const actions: Actions = {
