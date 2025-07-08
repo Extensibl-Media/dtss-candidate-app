@@ -1,13 +1,13 @@
 import { dev } from '$app/environment';
-export const BASE_URL = dev ? 'http://localhost:5173' : 'https://dentalstaff.us';
+export const BASE_URL = dev ? 'http://localhost:5173' : 'https://www.dentalstaff.us';
 export const APP_NAME = 'DentalStaff.US';
 export const CONTACT_EMAIL = 'support@dentalstaff.us';
-export const DOMAIN = 'dentalstaff.us';
+export const DOMAIN = 'www.dentalstaff.us';
 /* WARNING!!! TERMS AND CONDITIONS AND PRIVACY POLICY
 WERE CREATED BY CHATGPT AS AN EXAMPLE ONLY.
 CONSULT A LAWYER AND DEVELOP YOUR OWN TERMS AND PRIVACY POLICY!!! */
 export const TERMS_PRIVACY_CONTACT_EMAIL = 'support@dentalstaff.us';
-export const TERMS_PRIVACY_WEBSITE = 'dentalstaff.us';
+export const TERMS_PRIVACY_WEBSITE = 'dwww.entalstaff.us';
 export const TERMS_PRIVACY_COMPANY = 'Dental Staff United';
 export const TERMS_PRIVACY_EFFECTIVE_DATE = 'January 1, 2023';
 export const TERMS_PRIVACY_APP_NAME = 'Dental Staff United';
