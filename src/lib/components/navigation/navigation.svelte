@@ -104,14 +104,14 @@
 					>
 					<a
 						class="flex items-center text-sm font-medium text-blue-800"
-						href="/contact-us"
-						class:active={activeUrl.includes('/contact-us')}>Contact Us</a
+						href="/#contact-us"
+						class:active={activeUrl.includes('/#contact-us')}>Contact Us</a
 					>
-					<a
+					<!-- <a
 						class="flex items-center text-sm font-medium text-blue-800"
 						href="/about-us"
 						class:active={activeUrl.includes('/about-us')}>About Us</a
-					>
+					> -->
 				{/if}
 			</nav>
 		</div>
@@ -238,10 +238,13 @@
 										label="For Businesses"
 										href="/#business-members"
 									></SidebarItem>
-									<SidebarItem on:click={() => (hidden = true)} label="Contact Us" href="/#contact"
+									<SidebarItem
+										on:click={() => (hidden = true)}
+										label="Contact Us"
+										href="/#contact-us"
 									></SidebarItem>
-									<SidebarItem on:click={() => (hidden = true)} label="About Us" href="/about-us"
-									></SidebarItem>
+									<!-- <SidebarItem on:click={() => (hidden = true)} label="About Us" href="/about-us"
+									></SidebarItem> -->
 									<div class="flex flex-col gap-4 w-full">
 										<Button
 											class="bg-blue-800 hover:bg-blue-900"

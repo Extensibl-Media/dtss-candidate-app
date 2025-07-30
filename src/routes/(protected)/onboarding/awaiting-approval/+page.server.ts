@@ -27,7 +27,6 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	const profile = await profileReq.json();
-	console.log(profile);
 
 	if (user.completedOnboarding && profile.approved) {
 		redirect(302, '/dashboard');

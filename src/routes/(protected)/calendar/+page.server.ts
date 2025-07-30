@@ -55,6 +55,10 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 
 		const profile = await profileReq.json();
 
+		// if (!profile.approved) {
+		// 	redirect(302, '/onboarding/awaiting-approval');
+		// }
+
 		return { user, profile, recurrenceDays };
 	} catch (error) {
 		console.error(error);

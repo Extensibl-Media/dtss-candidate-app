@@ -23,22 +23,22 @@
 						Connecting Dental Professionals Within a Private Member Association
 					</h1>
 					<p class="mt-3 text-base text-blue-100 sm:mt-5 sm:text-xl">
-						DentalStaff United operates as an ecclesiastic private member association, providing a
-						secure platform for dental professionals and practices to connect, collaborate, and
-						conduct business within a private domain governed by common law, trust, and contract
-						principles.
+						DentalStaff.US is a secure platform for dental professionals and practices to connect,
+						collaborate, and conduct business.
 					</p>
 					<div class="mt-8 flex flex-col sm:flex-row gap-4">
-						<button
+						<a
+							href={`${env.PUBLIC_CLIENT_APP_DOMAIN}/auth/sign-up`}
 							class="bg-white text-blue-800 font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-50 transition duration-300"
 						>
 							Find Talent Now
-						</button>
-						<button
+						</a>
+						<a
+							href="/auth/sign-up"
 							class="bg-transparent border-2 border-white text-white font-bold py-3 px-6 rounded-lg hover:bg-white hover:text-blue-800 transition duration-300"
 						>
 							Find Jobs Now
-						</button>
+						</a>
 					</div>
 				</div>
 				<div class="md:w-1/2">
@@ -80,7 +80,7 @@
 		<div class="container mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="text-center mb-12">
 				<h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-					Why Choose <span class="text-blue-800">DentalStaff United</span>?
+					Why Choose <span class="text-blue-800">DentalStaff.US</span>?
 				</h2>
 				<p class="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
 					We empower the dental industry with tailored staffing solutions that connect professionals
@@ -295,7 +295,7 @@
 						</li>
 					</ul>
 					<Button
-						href="https://app.dentalstaff.us/auth/sign-up"
+						href={`${env.PUBLIC_CLIENT_APP_DOMAIN}/auth/sign-up`}
 						variant="default"
 						class="bg-blue-800 hover:bg-blue-900 mt-8">Hire Talent Now</Button
 					>
@@ -640,16 +640,17 @@
 						help you achieve your goals. Let's connect today and explore how we can work together.
 					</p>
 					<div class="mt-8 flex flex-col sm:flex-row gap-4">
-						<button
+						<a
+							href={`${env.PUBLIC_CLIENT_APP_DOMAIN}/auth/sign-up`}
 							class="bg-white text-blue-800 font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-50 transition duration-300"
 						>
-							Schedule a Consultation
-						</button>
-						<button
+							Find Your Next Hire
+						</a>
+						<!-- <a
+							href="/auth/sign-up"
 							class="bg-transparent border-2 border-white text-white font-bold py-3 px-6 rounded-lg hover:bg-white hover:text-blue-800 transition duration-300"
-						>
-							Submit Your Resume
-						</button>
+							>Find Your Next Job
+						</a> -->
 					</div>
 				</div>
 			</div>
@@ -691,7 +692,7 @@
 	</section> -->
 
 	<!-- Contact Form Section -->
-	<section id="contact" class="py-20 bg-white">
+	<section id="contact-us" class="py-20 bg-white">
 		<div class="container mx-auto px-4">
 			<div class="flex flex-col md:flex-row">
 				<!-- Left Side - Content -->
@@ -723,7 +724,7 @@
 							</svg>
 							<div>
 								<h3 class="font-semibold text-blue-300">Email</h3>
-								<p class="mt-1">info@dentalstaff.us</p>
+								<p class="mt-1">support@dentalstaff.us</p>
 							</div>
 						</div>
 						<div class="flex items-start">
@@ -743,7 +744,7 @@
 							</svg>
 							<div>
 								<h3 class="font-semibold text-blue-300">Phone</h3>
-								<!-- <p class="mt-1">(212) 555-7890</p> -->
+								<p class="mt-1">(888) 800-4224</p>
 							</div>
 						</div>
 					</div>
@@ -752,9 +753,13 @@
 				<!-- Right Side - Form -->
 				<div class="w-full md:w-1/2 md:p-16 lg:p-20 bg-white flex flex-col justify-center">
 					<h3 class="text-2xl font-semibold text-gray-900 mb-8">Get in Touch</h3>
-					<form class="space-y-6">
+					<form class="space-y-6" method="POST" action="https://api.web3forms.com/submit">
+						<input type="hidden" name="access_key" value="f3a3d4cd-057b-4db5-bfd0-77e92cb67b27" />
+						<input type="hidden" name="subject" value="New Submission from Website." />
+						<input type="hidden" name="from_name" value="DentalStaff US Contact Form" />
 						<div>
 							<input
+								name="full_name"
 								type="text"
 								placeholder="Full Name"
 								class="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-800 focus:outline-none transition-colors bg-transparent"
@@ -762,6 +767,7 @@
 						</div>
 						<div>
 							<input
+								name="email"
 								type="email"
 								placeholder="Email Address"
 								class="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-800 focus:outline-none transition-colors bg-transparent"
@@ -769,15 +775,21 @@
 						</div>
 						<div>
 							<select
+								name="user_type"
 								class="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-800 focus:outline-none transition-colors bg-transparent"
 							>
 								<option value="" selected disabled>I am a...</option>
-								<option value="jobseeker">Job Seeker</option>
-								<option value="employer">Employer</option>
+								<option value="Professional Member"
+									>Professional Service Provider to Dental Organizations</option
+								>
+								<option value="Business Member"
+									>Business Providing Dental Care Services to Patients</option
+								>
 							</select>
 						</div>
 						<div>
 							<textarea
+								name="message"
 								placeholder="Your Message"
 								rows="4"
 								class="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-blue-800 focus:outline-none transition-colors bg-transparent"
@@ -872,7 +884,7 @@
 							<a href={null} class="text-gray-400 hover:text-white cursor-pointer">Browse Jobs</a>
 						</li> -->
 						<li>
-							<a href={'/augh/sign-in'} class="text-gray-400 hover:text-white cursor-pointer"
+							<a href={'/auth/sign-in'} class="text-gray-400 hover:text-white cursor-pointer"
 								>Professional Member Portal</a
 							>
 						</li>
@@ -885,11 +897,13 @@
 						Quick Links
 					</h3>
 					<ul class="space-y-3">
-						<li>
+						<!-- <li>
 							<a href={null} class="text-gray-400 hover:text-white cursor-pointer">About Us</a>
-						</li>
+						</li> -->
 						<li>
-							<a href={null} class="text-gray-400 hover:text-white cursor-pointer">Contact Us</a>
+							<a href="/#contact-us" class="text-gray-400 hover:text-white cursor-pointer"
+								>Contact Us</a
+							>
 						</li>
 					</ul>
 				</div>
