@@ -1,4 +1,3 @@
-import { USER_ROLES } from './../../../../../../dental-staff-app/src/lib/config/constants';
 import { fail, redirect } from '@sveltejs/kit';
 import { setFlash } from 'sveltekit-flash-message/server';
 import { setError, superValidate } from 'sveltekit-superforms/server';
@@ -51,7 +50,7 @@ export const actions = {
 				firstName: form.data.firstName,
 				lastName: form.data.lastName,
 				password: password,
-				role: USER_ROLES.CANDIDATE,
+				role: 'CANDIDATE',
 				verified: false,
 				receiveEmail: true,
 				token: token,
