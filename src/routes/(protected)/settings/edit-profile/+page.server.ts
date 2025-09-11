@@ -117,6 +117,7 @@ export const actions: Actions = {
 
 		const token = generateToken(userId);
 		const form = await superValidate(event, updateProfileSchema);
+		console.log(form.data);
 
 		const emailService = new EmailService();
 
@@ -133,10 +134,9 @@ export const actions: Actions = {
 
 		const candidateData = {
 			birthday: form.data.birthday,
-			address: form.data.address,
-			state: form.data.state,
-			city: form.data.city,
-			zipcode: form.data.zipcode,
+			completeAddress: form.data.completeAddress,
+			lat: form.data.lat,
+			lon: form.data.lon,
 			cellPhone: form.data.cellPhone,
 			hourlyRateMin: form.data.hourlyRateMin,
 			hourlyRateMax: form.data.hourlyRateMax

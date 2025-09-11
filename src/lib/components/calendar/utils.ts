@@ -108,7 +108,7 @@ export function convertRecurrenceDayToEvent(data: {
 	requisition: { id: any; title?: any; hourlyRate?: number };
 	workday: any | null;
 	company: { id: string; name?: string; logo?: string };
-	location: { id: string; name?: string; city?: string; state?: string; zipCode?: string };
+	location: { completeAddress: string };
 }) {
 	const {
 		recurrenceDay: { id: recurrenceDayId, date, startTime, endTime, status },

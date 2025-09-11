@@ -59,7 +59,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 		// 	redirect(302, '/onboarding/awaiting-approval');
 		// }
 
-		return { user, profile, recurrenceDays };
+		return { user, profile, recurrenceDays: recurrenceDays.recurrenceDays };
 	} catch (error) {
 		console.error(error);
 	}

@@ -12,6 +12,9 @@
   import Button from '$lib/components/ui/button/button.svelte';
 	import AvatarUpload from '$lib/components/general/avatar-upload.svelte';
 	import { tick } from 'svelte';
+  import AddressSearchAutocomplete from "$lib/components/AddressSearchAutocomplete.svelte";
+  import type {AddressResult} from "$lib/types";
+  import {Label} from "$lib/components/ui/label";
 
 
   export let data: PageData
@@ -46,6 +49,18 @@
         form.requestSubmit(); // Use the native submit instead of dispatchEvent
       }
     }
+  }
+
+  let selectedAddress: AddressResult | null = null;
+  let selectedTimezone = '';
+
+  function handleAddressSelect(event: CustomEvent<AddressResult>) {
+      const address = event.detail;
+      selectedAddress = address;
+  }
+
+  function handleClear() {
+      selectedAddress = null;
   }
 </script>
 
@@ -86,65 +101,21 @@
                 </Alert.Description>
             </Alert.Root>
         {/if}
-        <div class="col-span-8">
-            <Form.Field config={{form: form, schema: newProfileSchema}} name="address">
-                <Form.Item>
-                    <Form.Label>Address</Form.Label>
-                    <Form.Input />
-                    <Form.Validation />
-                </Form.Item>
-            </Form.Field>
+        <div class="col-span-8 mb-4">
+            <Label>Address</Label>
+            <AddressSearchAutocomplete
+                    bind:selected={selectedAddress}
+                    on:select={handleAddressSelect}
+                    on:clear={handleClear}
+                    placeholder="Enter your address..."
+                    country="us"
+                    maxResults={8}
+            />
+            <input type="hidden" name="completeAddress" value={selectedAddress?.formatted_address}/>
+            <input type="hidden" name="lat" value={selectedAddress?.coordinates.lat}/>
+            <input type="hidden" name="lon" value={selectedAddress?.coordinates.lng}/>
         </div>
-        <div class="col-span-8 sm:col-span-4">
-            <Form.Field config={{form: form, schema: newProfileSchema}} name="city">
-                <Form.Item>
-                    <Form.Label>City</Form.Label>
-                    <Form.Input />
-                    <Form.Validation />
-                </Form.Item>
-            </Form.Field>
-        </div>
-        <div class="col-span-4 sm:col-span-2">
-            <Form.Field config={{form: form, schema: newProfileSchema}} name="state">
-                <Form.Control>
-                    <Form.Item>
-                        <Form.Label>State</Form.Label>
-                        <Form.Select preventScroll={false}
-                            selected={selectedState}
-                                    onSelectedChange={(v) => {
-                                      v && ($formData.state = String(v.value));
-                                    }}
-                        >
-                                <Select.Trigger>
-                                    <Select.Value />
-                                </Select.Trigger>
-                                <Select.Content class="max-h-[150px] overflow-y-scroll">
-                                    {#each STATES as state}
-                                        <Select.Item value={state.abbreviation}>
-                                            <span>{state.abbreviation}</span>
-                                        </Select.Item>
-                                    {/each}
-                                </Select.Content>
-                                <Input type="hidden" value={$formData.state} name="state"/>
-                        </Form.Select>
-                        <Form.Validation/>
-                    </Form.Item>
-                </Form.Control>
-            </Form.Field>
-        </div>
-        <div class="col-span-4 sm:col-span-2">
-            <Form.Field config={{form: form, schema: newProfileSchema}} name="zipcode">
-                <Form.Item>
-                    <Form.Label>Zipcode</Form.Label>
-                    <Form.Input type="number" maxlength={5} on:input={(event) => {
-                      if(event.currentTarget.value.length > 5){
-                        event.currentTarget.value = event.currentTarget.value.slice(0, 5)
-                      }
-                    }}/>
-                    <Form.Validation />
-                </Form.Item>
-            </Form.Field>
-        </div>
+
         <div class="col-span-8 sm:col-span-4">
             <Form.Field config={{form: form, schema: newProfileSchema}} name="birthday">
                 <Form.Item>

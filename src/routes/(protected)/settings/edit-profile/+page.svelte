@@ -20,28 +20,22 @@
 	import AvatarUpload from '$lib/components/general/avatar-upload.svelte';
 	import { tick } from 'svelte';
 	import { getUserTimezone, formatTimezoneName } from '$lib/_helpers/UTCTimezoneUtils';
+	import type {AddressResult} from "$lib/types";
+	import {Label} from "$lib/components/ui/label";
+	import AddressSearchAutocomplete from "$lib/components/AddressSearchAutocomplete.svelte";
 
 	export let data: PageData;
+	let selectedAddress: AddressResult | null = null;
+
 	$: user = data.user;
 	$: formattedTimezone = formatTimezoneName(user.timezone);
-
-	$: console.log('user timezone', {
-		timezone: user.timezone,
-		formatted: formattedTimezone
-	});
 	$: browserTimezone = getUserTimezone();
+	$: userAddress = data.profile.completeAddress || "Not set";
 
 	const form = superForm(data.form);
 	const avatarForm = superForm(data.avatarForm);
 	const { enhance, form: formData, errors, submitting } = form;
 	const { form: formAvatar, enhance: avatarEnhance, errors: avatarError } = avatarForm;
-
-	$: selectedState = $formData.state
-		? {
-				label: $formData.state,
-				value: $formData.state
-			}
-		: undefined;
 
 	async function handleAvatarUpdated(url: string) {
 		$formAvatar.url = url;
@@ -60,6 +54,14 @@
 				form.requestSubmit(); // Use the native submit instead of dispatchEvent
 			}
 		}
+	}
+
+	function handleAddressSelect(event: CustomEvent<AddressResult>) {
+		selectedAddress = event.detail;
+	}
+
+	function handleClear() {
+		selectedAddress = null;
 	}
 </script>
 
@@ -215,91 +217,20 @@
 					<h3 class="text-lg font-medium">Location</h3>
 
 					<div class="space-y-2">
-						<Form.Field config={{ form: form, schema: updateProfileSchema }} name="address">
-							<Form.Item>
-								<Form.Label>Address</Form.Label>
-								<Form.Input />
-								<Form.Validation />
-							</Form.Item>
-						</Form.Field>
+						<Label>Address</Label>
+						<p>{userAddress}</p>
+						<AddressSearchAutocomplete
+								bind:selected={selectedAddress}
+								on:select={handleAddressSelect}
+								on:clear={handleClear}
+								placeholder="Update your address..."
+								country="us"
+								maxResults={8}
+						/>
 					</div>
-
-					<div class="grid grid-cols-8 gap-4">
-						<div class="col-span-8 sm:col-span-4">
-							<Form.Field config={{ form: form, schema: updateProfileSchema }} name="city">
-								<Form.Item>
-									<Form.Label>City</Form.Label>
-									<Form.Input />
-									<Form.Validation />
-								</Form.Item>
-							</Form.Field>
-						</div>
-
-						<div class="col-span-4 sm:col-span-2">
-							<Form.Field config={{ form: form, schema: updateProfileSchema }} name="state">
-								<Form.Control>
-									<Form.Item>
-										<Form.Label>State</Form.Label>
-										<Form.Select
-											preventScroll={false}
-											selected={selectedState}
-											onSelectedChange={(v) => {
-												v && ($formData.state = String(v.value));
-											}}
-										>
-											<Select.Trigger>
-												<Select.Value />
-											</Select.Trigger>
-											<Select.Content class="max-h-[150px] overflow-y-scroll">
-												{#each STATES as state}
-													<Select.Item value={state.abbreviation}>
-														<span>{state.abbreviation}</span>
-													</Select.Item>
-												{/each}
-											</Select.Content>
-											<Input type="hidden" value={$formData.state} name="state" />
-										</Form.Select>
-										<Form.Validation />
-									</Form.Item>
-								</Form.Control>
-							</Form.Field>
-						</div>
-
-						<div class="col-span-4 sm:col-span-2">
-							<Form.Field config={{ form: form, schema: updateProfileSchema }} name="zipcode">
-								<Form.Item>
-									<Form.Label>Zipcode</Form.Label>
-									<Form.Input
-										type="number"
-										maxlength={5}
-										on:input={(event) => {
-											if (event.currentTarget.value.length > 5) {
-												event.currentTarget.value = event.currentTarget.value.slice(0, 5);
-											}
-										}}
-									/>
-									<Form.Validation />
-								</Form.Item>
-							</Form.Field>
-						</div>
-						<div class="col-span-8 sm:col-span-4">
-							<Form.Field config={{ form: form, schema: updateProfileSchema }} name="timezone">
-								<Form.Label>Timezone</Form.Label>
-								<p class="mt-4 text-muted-foreground">{formattedTimezone} - {$formData.timezone}</p>
-								<Button
-									variant="outline"
-									class="mt-2"
-									type="button"
-									on:click={(e) => {
-										e.preventDefault();
-										$formData.timezone = browserTimezone;
-										formattedTimezone = formatTimezoneName(browserTimezone);
-									}}>Detect Timezone</Button
-								>
-								<Form.Input type="hidden" value={$formData.timezone} />
-							</Form.Field>
-						</div>
-					</div>
+					<input type="hidden" name="completeAddress" value={selectedAddress?.formatted_address}/>
+					<input type="hidden" name="lat" value={selectedAddress?.coordinates.lat}/>
+					<input type="hidden" name="lon" value={selectedAddress?.coordinates.lng}/>
 				</div>
 
 				<Separator />

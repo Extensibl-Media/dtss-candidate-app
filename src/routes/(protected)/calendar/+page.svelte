@@ -101,11 +101,6 @@
 						/>
 						<div class="flex flex-col">
 							<span class="font-medium">{selectedEvent?.extendedProps.company.name}</span>
-							<span class="text-sm text-gray-500">
-								{selectedEvent?.extendedProps.location.city}, {selectedEvent?.extendedProps.location
-									.state}
-								{selectedEvent?.extendedProps.location.zip}
-							</span>
 						</div>
 					</div>
 				</Dialog.Description>
@@ -169,12 +164,15 @@
 							<p class="font-semibold text-lg">Location</p>
 							<div class="flex items-center gap-2 text-gray-600">
 								<MapPin size={18} />
-								<span>
-									{selectedEvent.extendedProps.location.name} - {selectedEvent.extendedProps
-										.location.city},
-									{selectedEvent.extendedProps.location.state}
-									{selectedEvent.extendedProps.location.zip}
-								</span>
+								<div>
+									<p>
+										{selectedEvent.extendedProps.location.name}
+									</p>
+									<p class="text-sm text-gray-600">
+										{selectedEvent.extendedProps
+												.location.completeAddress}
+									</p>
+								</div>
 							</div>
 						</div>
 					{/if}
