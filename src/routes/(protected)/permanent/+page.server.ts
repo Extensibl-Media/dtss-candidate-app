@@ -61,7 +61,7 @@ export const load: PageServerLoad = async ({ fetch, locals, setHeaders }) => {
 		]);
 
 		return {
-			requisitions,
+			requisitions: requisitions.requisitions,
 			applied
 		};
 	} catch (err) {

@@ -66,6 +66,9 @@
 						</div>
 					</div>
 				{/each}
+				{#if requisitions.length === 0}
+					<p class="col-span-6 text-center text-gray-500">No permanent job openings available.</p>
+				{/if}
 			</div>
 		</Tabs.Content>
 		<Tabs.Content value="Applied">
@@ -116,6 +119,10 @@
 						</div>
 					</div>
 				{/each}
+
+				{#if applied.length === 0}
+					<p class="col-span-6 text-center text-gray-500">You have not applied to any jobs yet.</p>
+				{/if}
 			</div>
 		</Tabs.Content>
 		<Tabs.Content value="Saved">
