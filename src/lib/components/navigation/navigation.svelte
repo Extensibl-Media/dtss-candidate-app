@@ -118,10 +118,10 @@
 		<div class="flex flex-1 items-center justify-end space-x-4">
 			<nav class="md:flex items-center space-x-1 hidden">
 				{#if !user}
-					<Button class="bg-blue-800 hover:bg-blue-900" on:click={() => goto('/auth/sign-up')}
+					<Button class="bg-blue-800 hover:bg-blue-900" on:click={() => goto('/auth/role-check?action=sign-up')}
 						>Get Started</Button
 					>
-					<Button variant="outline" class="text-blue-800" on:click={() => goto('/auth/sign-in')}
+					<Button variant="outline" class="text-blue-800" on:click={() => goto('/auth/role-check?action=sign-in')}
 						>Sign in</Button
 					>
 				{:else}
