@@ -248,14 +248,12 @@
 									<div class="flex flex-col gap-4 w-full">
 										<Button
 											class="bg-blue-800 hover:bg-blue-900"
-											href={`/auth/sign-up`}
-											on:click={() => (hidden = true)}>Get Started</Button
+											on:click={() => goto('/auth/role-check?action=sign-up')}>Get Started</Button
 										>
 										<Button
 											variant="outline"
 											class="text-blue-800"
-											href="/auth/sign-in"
-											on:click={() => (hidden = true)}>Sign in</Button
+											on:click={() => goto('/auth/role-check?action=sign-up')}>Sign in</Button
 										>
 									</div>
 								</SidebarGroup>
