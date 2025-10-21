@@ -13,9 +13,9 @@ export const load: PageServerLoad = async (event) => {
 	}
 	const userId = user.id;
 
-	if (!user.completedOnboarding && user.onboardingStep > 2) {
-		redirect(302, '/onboarding/resume');
-	}
+	// if (!user.completedOnboarding && user.onboardingStep > 2) {
+	// 	redirect(302, '/onboarding/resume');
+	// }
 
 	const token = generateToken(userId);
 
