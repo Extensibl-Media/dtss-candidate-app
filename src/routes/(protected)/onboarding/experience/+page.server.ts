@@ -81,6 +81,8 @@ export const actions: Actions = {
 
 		const form = await superValidate(request, newCandidateDisciplinesSchema);
 
+		console.log({ form: JSON.stringify(form) });
+
 		if (!form.valid) {
 			return fail(400, { form });
 		}

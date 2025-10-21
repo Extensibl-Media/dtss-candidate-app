@@ -2,12 +2,13 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Select from '$lib/components/ui/select';
-	import { AlertCircle } from 'lucide-svelte';
+	import { AlertCircle, DollarSign, X } from 'lucide-svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import type { PageData } from './$types';
 	import { superForm } from 'sveltekit-superforms/client';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { Separator } from '$lib/components/ui/separator';
+	import Label from '$lib/components/ui/label/label.svelte';
 
 	export let data: PageData;
 	$: profile = data.profile;
@@ -18,7 +19,7 @@
 	const form = superForm(data.form, {
 		dataType: 'json'
 	});
-	const { enhance, form: formData, errors } = form;
+	const { enhance, form: formData, errors, submitting } = form;
 
 	// Initialize disciplines array if it doesn't exist
 	$: if (!$formData.disciplines) {
@@ -26,7 +27,12 @@
 	}
 
 	$: if (candidateDisciplines?.length > 0) {
-		$formData.disciplines = candidateDisciplines;
+		$formData.disciplines = candidateDisciplines.map(d => ({
+			disciplineId: d.disciplineId,
+			experienceLevelId: d.experienceLevelId,
+			preferredHourlyMin: d.preferredHourlyMin || 0,
+			preferredHourlyMax: d.preferredHourlyMax || 0
+		}));
 	}
 
 	// Search/filter functionality
@@ -35,37 +41,54 @@
 		? disciplines.filter((d) => d.name.toLowerCase().includes(searchTerm.toLowerCase()))
 		: disciplines;
 
+	// Temporary form state for adding new discipline
+	let selectedDisciplineId = '';
+	let selectedExperienceLevelId = experienceLevels?.length > 0 ? experienceLevels[0].id : '';
+	let tempMinRate = 0;
+	let tempMaxRate = 0;
+
 	// Check if a discipline is already selected
 	function isDisciplineSelected(disciplineId: string) {
 		return $formData.disciplines.some((d) => d.disciplineId === disciplineId);
 	}
 
-	// Add a discipline to the selected list
-	function addDiscipline(disciplineId: string) {
-		if (!isDisciplineSelected(disciplineId)) {
-			$formData.disciplines = [
-				...$formData.disciplines,
-				{
-					disciplineId,
-					experienceLevelId: experienceLevels.length > 0 ? experienceLevels[0].id : ''
-				}
-			];
+	// Add a discipline to the selected list with rates
+	function addDisciplineWithRates() {
+		if (!selectedDisciplineId) {
+			return;
 		}
+
+		if (isDisciplineSelected(selectedDisciplineId)) {
+			alert('This discipline has already been added');
+			return;
+		}
+
+		if (tempMaxRate < tempMinRate) {
+			alert('Maximum rate must be greater than or equal to minimum rate');
+			return;
+		}
+
+		$formData.disciplines = [
+			...$formData.disciplines,
+			{
+				disciplineId: selectedDisciplineId,
+				experienceLevelId: selectedExperienceLevelId,
+				preferredHourlyMin: tempMinRate,
+				preferredHourlyMax: tempMaxRate
+			}
+		];
+
+		// Reset form
+		selectedDisciplineId = '';
+		selectedExperienceLevelId = experienceLevels.length > 0 ? experienceLevels[0].id : '';
+		tempMinRate = 0;
+		tempMaxRate = 0;
+		searchTerm = '';
 	}
 
 	// Remove a discipline from the selected list
 	function removeDiscipline(disciplineId: string) {
 		$formData.disciplines = $formData.disciplines.filter((d) => d.disciplineId !== disciplineId);
-	}
-
-	// Update experience level for a discipline
-	function updateExperienceLevel(
-		disciplineId: string,
-		experienceLevel: { value: string; label: string; disabled: boolean }
-	) {
-		$formData.disciplines = $formData.disciplines.map((d) =>
-			d.disciplineId === disciplineId ? { ...d, experienceLevelId: experienceLevel.value } : d
-		);
 	}
 
 	// Get discipline name by ID
@@ -74,8 +97,13 @@
 		return discipline ? discipline.name : 'Unknown Discipline';
 	}
 
+	// Get experience level value by ID
+	function getExperienceLevelValue(experienceLevelId: string) {
+		const level = experienceLevels.find((l) => l.id === experienceLevelId);
+		return level ? level.value : 'Unknown';
+	}
+
 	$: sortedExperienceLevels = [...experienceLevels].sort((a, b) => {
-		// Define a priority order
 		const priorityMap = {
 			'0-2 Years': 1,
 			'2-5 Years': 2,
@@ -84,43 +112,40 @@
 			'10+ years': 5
 		};
 
-		// Get priorities (defaulting to 999 if not found)
 		const priorityA = priorityMap[a.value] || 999;
 		const priorityB = priorityMap[b.value] || 999;
 
-		// Sort by priority
 		return priorityA - priorityB;
 	});
 
-	$: disciplineString = JSON.stringify($formData.disciplines);
+	$: console.log(profile)
 </script>
 
 <svelte:head>
-	<title>Add Your Experience | DentalStaff.US</title>
+	<title>Manage Your Experience | DentalStaff.US</title>
 </svelte:head>
 
+<section class="sm:container mx-auto px-4 py-6 space-y-8">
+	<h1 class="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">Work Experience</h1>
 {#if profile.status === 'ACTIVE'}
-	<section class="p-4">
 		<Alert.Root class="mb-4">
 			<Alert.Title class="text-lg font-semibold">Profile Approved</Alert.Title>
 			<Alert.Description>
 				Your profile has been approved. You cannot edit your experience at this time.
 			</Alert.Description>
 		</Alert.Root>
-	</section>
 {:else}
-	<section class="sm:container grid items-center gap-6 max-w-2xl">
+
 		<Card.Root class="border-0 sm:border">
 			<Card.Header class="space-y-1">
-				<Card.Title class="text-2xl">Add your work experience</Card.Title>
-				<Card.Description
-					>Select the disciplines you have experience in and specify your experience level for each.</Card.Description
-				>
+				<Card.Title class="text-2xl">Manage your work experience</Card.Title>
+				<Card.Description>
+					Select the disciplines you have experience in, specify your experience level, and set your preferred hourly rate for each.
+				</Card.Description>
 			</Card.Header>
 			<Card.Content>
 				<form id="experienceForm" action="?/submitExperience" method="POST" use:enhance>
-					<input type="hidden" bind:value={disciplineString} name="disciplines" />
-					<div class="grid gap-4">
+					<div class="grid gap-6">
 						{#if $errors._errors?.length}
 							<Alert.Root variant="destructive">
 								<AlertCircle class="h-4 w-4" />
@@ -133,107 +158,165 @@
 							</Alert.Root>
 						{/if}
 
-						<!-- Search box -->
-						<div class="mb-4">
-							<label
-								for="search"
-								class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-							>
-								Search Disciplines
-							</label>
-							<Input
-								id="search"
-								type="text"
-								placeholder="Search by name..."
-								bind:value={searchTerm}
-								class="w-full mt-1.5"
-							/>
-						</div>
+						<!-- Add Discipline Form -->
+						<div class="border rounded-lg p-4 bg-gray-50">
+							<h3 class="text-sm font-medium mb-4">Add New Discipline</h3>
 
-						<!-- Available Disciplines List -->
-						<div class="border rounded-md p-4">
-							<p class="text-sm font-medium leading-none mb-2 block">Available Disciplines</p>
-							{#if filteredDisciplines.length === 0}
-								<p class="text-sm text-gray-500">No matching disciplines found</p>
-							{:else}
-								<div class="max-h-60 overflow-y-auto">
-									{#each filteredDisciplines as discipline}
-										<div
-											class="flex items-center justify-between py-2 hover:bg-gray-50 px-2 rounded"
-										>
-											<span class="text-sm">{discipline.name}</span>
-											<Button
-												type="button"
-												variant={isDisciplineSelected(discipline.id) ? 'destructive' : 'outline'}
-												size="sm"
-												on:click={() =>
-													isDisciplineSelected(discipline.id)
-														? removeDiscipline(discipline.id)
-														: addDiscipline(discipline.id)}
-											>
-												{isDisciplineSelected(discipline.id) ? 'Remove' : 'Add'}
-											</Button>
+							<div class="grid gap-4">
+								<!-- Discipline Search/Select -->
+								<div>
+									<Label for="search">Search & Select Discipline</Label>
+									<Input
+										id="search"
+										type="text"
+										placeholder="Search by name..."
+										bind:value={searchTerm}
+										class="mt-1.5"
+									/>
+
+									{#if searchTerm && filteredDisciplines.length > 0}
+										<div class="mt-2 border rounded-md bg-white max-h-48 overflow-y-auto">
+											{#each filteredDisciplines as discipline}
+												<button
+													type="button"
+													class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-b last:border-b-0"
+													class:bg-blue-50={selectedDisciplineId === discipline.id}
+													on:click={() => {
+														selectedDisciplineId = discipline.id;
+														searchTerm = discipline.name;
+													}}
+													disabled={isDisciplineSelected(discipline.id)}
+												>
+													{discipline.name}
+													{#if isDisciplineSelected(discipline.id)}
+														<span class="text-xs text-gray-500 ml-2">(Already added)</span>
+													{/if}
+												</button>
+											{/each}
 										</div>
-									{/each}
+									{/if}
 								</div>
-							{/if}
+
+								<!-- Experience Level -->
+								<div>
+									<Label>Experience Level</Label>
+									<Select.Root
+										selected={{ value: selectedExperienceLevelId, label: getExperienceLevelValue(selectedExperienceLevelId) }}
+										onSelectedChange={(value) => selectedExperienceLevelId = value?.value || ''}
+									>
+										<Select.Trigger class="mt-1.5">
+											<Select.Value placeholder="Select experience level" />
+										</Select.Trigger>
+										<Select.Content>
+											{#each sortedExperienceLevels as level}
+												<Select.Item value={level.id}>{level.value}</Select.Item>
+											{/each}
+										</Select.Content>
+									</Select.Root>
+								</div>
+
+								<!-- Hourly Rate Range -->
+								<div class="grid grid-cols-2 gap-4">
+									<div>
+										<Label for="minRate">Minimum Rate ($/hr)</Label>
+										<div class="relative mt-1.5">
+											<DollarSign class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+											<Input
+												id="minRate"
+												type="number"
+												min="0"
+												step="1"
+												bind:value={tempMinRate}
+												class="pl-9"
+												placeholder="0"
+											/>
+										</div>
+									</div>
+									<div>
+										<Label for="maxRate">Maximum Rate ($/hr)</Label>
+										<div class="relative mt-1.5">
+											<DollarSign class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+											<Input
+												id="maxRate"
+												type="number"
+												min="0"
+												step="1"
+												bind:value={tempMaxRate}
+												class="pl-9"
+												placeholder="0"
+											/>
+										</div>
+									</div>
+								</div>
+
+								<Button
+									type="button"
+									variant="outline"
+									class="w-full"
+									on:click={addDisciplineWithRates}
+									disabled={!selectedDisciplineId}
+								>
+									Add Discipline
+								</Button>
+							</div>
 						</div>
 
 						{#if $errors.disciplines?._errors?.length}
-							<p class="text-sm text-red-500">{$errors.disciplines._errors[0]}</p>
+							<Alert.Root variant="destructive">
+								<AlertCircle class="h-4 w-4" />
+								<Alert.Description>
+									{$errors.disciplines._errors[0]}
+								</Alert.Description>
+							</Alert.Root>
 						{/if}
 
-						<!-- Selected Disciplines with Experience Level Selection -->
-						<div class="mt-6">
-							<h3 class="text-sm font-medium leading-none mb-3">Selected Disciplines</h3>
+						<!-- Selected Disciplines List -->
+						<div>
+							<h3 class="text-sm font-medium mb-3">Your Experience ({$formData.disciplines.length})</h3>
 
 							{#if $formData.disciplines.length === 0}
-								<p class="text-sm text-gray-500">No disciplines selected yet</p>
+								<div class="border rounded-md p-8 text-center">
+									<p class="text-sm text-gray-500">No disciplines added yet</p>
+									<p class="text-xs text-gray-400 mt-1">Add your first discipline above to get started</p>
+								</div>
 							{:else}
-								<div class="space-y-3 border rounded-md p-4">
+								<div class="space-y-3">
 									{#each $formData.disciplines as discipline, index}
-										<div
-											class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2"
-										>
-											<div class="font-medium">{getDisciplineName(discipline.disciplineId)}</div>
+										<div class="border rounded-lg p-4 bg-white">
+											<div class="flex items-start justify-between gap-4">
+												<div class="flex-1 min-w-0">
+													<p class="font-medium text-sm text-gray-900 truncate">
+														{getDisciplineName(discipline.disciplineId)}
+													</p>
+													<p class="text-xs text-gray-600 mt-1">
+														{getExperienceLevelValue(discipline.experienceLevelId)}
+													</p>
+												</div>
 
-											<div class="flex items-center gap-2">
-												<Select.Root
-													selected={{
-														value: discipline.experienceLevelId,
-														label:
-															experienceLevels.find(
-																(level) => level.id === discipline.experienceLevelId
-															)?.value || 'Unknown'
-													}}
-													onSelectedChange={(value) =>
-														updateExperienceLevel(discipline.disciplineId, value)}
-												>
-													<Select.Trigger class="max-w-[300px]">
-														<Select.Value placeholder="Select experience" />
-													</Select.Trigger>
-													<Select.Content>
-														{#each sortedExperienceLevels as level}
-															<Select.Item value={level.id}>{level.value}</Select.Item>
-														{/each}
-													</Select.Content>
-												</Select.Root>
+												<div class="flex items-center gap-3">
+													<div class="text-right flex-shrink-0">
+														<div class="flex items-center gap-1 text-sm font-medium text-gray-900">
+															<DollarSign class="h-4 w-4 text-gray-500"/>
+															<span>
+																{discipline.preferredHourlyMin} - {discipline.preferredHourlyMax}
+															</span>
+														</div>
+														<p class="text-xs text-gray-500 mt-0.5">/hr</p>
+													</div>
 
-												<Button
-													type="button"
-													variant="destructive"
-													size="icon"
-													on:click={() => removeDiscipline(discipline.disciplineId)}
-												>
-													<span class="sr-only">Remove</span>
-													×
-												</Button>
+													<Button
+														type="button"
+														variant="ghost"
+														size="icon"
+														class="h-8 w-8 text-gray-400 hover:text-red-600"
+														on:click={() => removeDiscipline(discipline.disciplineId)}
+													>
+														<X class="h-4 w-4" />
+														<span class="sr-only">Remove</span>
+													</Button>
+												</div>
 											</div>
 										</div>
-
-										{#if index < $formData.disciplines.length - 1}
-											<Separator />
-										{/if}
 									{/each}
 								</div>
 							{/if}
@@ -246,10 +329,15 @@
 					type="submit"
 					form="experienceForm"
 					class="w-full sm:w-fit ml-auto bg-blue-800 hover:bg-blue-900"
+					disabled={$formData.disciplines.length === 0 || $submitting}
 				>
-					Submit Experience
+					{#if $submitting}
+						Saving...
+					{:else}
+						Save Experience
+					{/if}
 				</Button>
 			</Card.Footer>
 		</Card.Root>
-	</section>
-{/if}
+	{/if}
+</section>

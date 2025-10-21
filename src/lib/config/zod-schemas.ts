@@ -111,8 +111,23 @@ export const updateProfileSchema = z.object({
 export type UpdateProfileSchema = typeof newProfileSchema;
 
 export const newCandidateDisciplinesSchema = z.object({
-	disciplines: z.array(z.object({ disciplineId: z.string(), experienceLevelId: z.string() }))
+	disciplines: z
+		.array(
+			z
+				.object({
+					disciplineId: z.string().min(1, 'Discipline is required'),
+					experienceLevelId: z.string().min(1, 'Experience level is required'),
+					preferredHourlyMin: z.coerce.number().min(0, 'Minimum rate must be at least 0').int(),
+					preferredHourlyMax: z.coerce.number().min(0, 'Maximum rate must be at least 0').int()
+				})
+				.refine((data) => data.preferredHourlyMax >= data.preferredHourlyMin, {
+					message: 'Maximum rate must be greater than or equal to minimum rate',
+					path: ['preferredHourlyMax']
+				})
+		)
+		.min(1, 'Please select at least one discipline')
 });
+
 export type NewCandidateDisciplinesSchema = typeof newCandidateDisciplinesSchema;
 
 export const fileUploadSchema = z.object({

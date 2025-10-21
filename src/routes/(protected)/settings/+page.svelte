@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+	Briefcase,
 		ChevronRight,
 		File,
 		FileCheck,
@@ -62,7 +63,13 @@
 			<ChevronRight />
 		</a>
 
-
+		<a href="/settings/experience" class="flex justify-between items-center my-6 md:my-8">
+			<div class="flex gap-2 items-center">
+				<Briefcase />
+				<p>Experience</p>
+			</div>
+			<ChevronRight />
+		</a>
 		<a href="/settings/documents" class="flex justify-between items-center my-6 md:my-8">
 			<div class="flex gap-2 items-center">
 				<File />

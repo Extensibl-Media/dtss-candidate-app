@@ -6,8 +6,7 @@
 	import { convertRecurrenceDayToEvent, type CalendarEvent } from '$lib/components/calendar/utils';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
-	import { CalendarDays, Clock, CircleDollarSign, MapPin, Tag } from 'lucide-svelte';
-	import { Badge } from '$lib/components/ui/badge';
+	import { CalendarDays, Clock, CircleDollarSign, MapPin, Tag, Building, Briefcase, GraduationCap } from 'lucide-svelte';	import { Badge } from '$lib/components/ui/badge';
 	import type { SuperValidated } from 'sveltekit-superforms';
 	import type { RecurrenceDayClaimSchema } from '$lib/config/zod-schemas.js';
 	import { superForm } from 'sveltekit-superforms/client';
@@ -63,6 +62,7 @@
 			}
 		}
 	});
+	$: console.log(selectedEvent)
 </script>
 
 <svelte:head>
@@ -89,16 +89,22 @@
 		</div>
 	{/if}
 	<Dialog.Root open={dialogOpen} onOpenChange={() => (dialogOpen = !dialogOpen)}>
-		<Dialog.Content class="max-w-xl">
+		<Dialog.Content class="max-w-xl overflow-auto h-full md:h-auto">
 			<Dialog.Header>
 				<Dialog.Title class="text-xl text-left font-bold">{selectedEvent?.title}</Dialog.Title>
 				<Dialog.Description>
 					<div class="flex items-center gap-3 py-2">
-						<img
-							src={selectedEvent?.extendedProps.company.logo}
-							class="w-12 h-12 rounded-lg shadow-lg object-cover"
-							alt="company logo"
-						/>
+						{#if selectedEvent?.extendedProps.company.logo}
+                            <img
+                                    src={selectedEvent?.extendedProps.company.logo}
+                                    alt={`${selectedEvent?.extendedProps.company.name} logo`}
+                                    class="w-12 h-12 rounded-lg shadow-lg object-cover"
+                            />
+                        {:else}
+                            <div class="h-12 w-12 flex items-center justify-center bg-gray-100 text-gray-400 rounded-lg">
+                                <Building class="h-8 w-8"/>
+                            </div>
+                        {/if}
 						<div class="flex flex-col">
 							<span class="font-medium">{selectedEvent?.extendedProps.company.name}</span>
 						</div>
@@ -141,6 +147,23 @@
 
 					<div class="space-y-3">
 						<p class="font-semibold text-lg">Position Details</p>
+						<div class="space-y-3">
+							<p class="font-semibold text-lg">Requirements</p>
+							<div class="space-y-2">
+								{#if selectedEvent.extendedProps.requisition.disciplineName}
+									<div class="flex items-center gap-2 text-gray-600">
+										<Briefcase size={18} />
+										<span>{selectedEvent.extendedProps.requisition.disciplineName}</span>
+									</div>
+								{/if}
+								{#if selectedEvent.extendedProps.requisition.experienceLevelName}
+									<div class="flex items-center gap-2 text-gray-600">
+										<GraduationCap size={18} />
+										<span>{selectedEvent.extendedProps.requisition.experienceLevelName}</span>
+									</div>
+								{/if}
+							</div>
+</div>
 						<div class="grid grid-cols-2 gap-4">
 							<div class="flex items-center gap-2 text-gray-600">
 								<CircleDollarSign size={18} />
@@ -190,7 +213,7 @@
 								value={selectedEvent.extendedProps.recurrenceDay.id}
 							/>
 							<Button
-								class="bg-blue-800 hover:bg-blue-900"
+								class="bg-blue-800 hover:bg-blue-900 w-full md:w-fit"
 								type="submit"
 								disabled={selectedEvent.extendedProps.recurrenceDay.status !== 'OPEN' ||
 									$submitting ||

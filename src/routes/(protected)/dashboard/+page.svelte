@@ -67,6 +67,8 @@
 				return { variant: 'secondary', text: status };
 		}
 	}
+
+	$: console.log('Workdays:', workdays);
 </script>
 
 <svelte:head>
@@ -112,22 +114,22 @@
 											class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
 										>
 											<div class="space-y-1">
-												<div class="font-medium">{shift.requisition.title}</div>
+												<div class="font-medium">{shift.requisition.title} <span class="text-xs text-gray-500">#{shift.requisition.id}</span></div>
 												<p class="text-sm text-muted-foreground">
-													{shift.company} • {shift.location}
+													{shift.company.companyName} • {shift.location?.name || 'Location Not Provided'}
 												</p>
 												<div class="flex items-center gap-2 text-sm">
 													<CalendarDays class="h-3.5 w-3.5 text-muted-foreground" />
-													<span>{shift.date}</span>
+													<span>{format(shift.recurrenceDay.date, 'PP')}</span>
 													<Clock class="h-3.5 w-3.5 ml-2 text-muted-foreground" />
-													<span>{shift.time}</span>
+													<span>{format(shift.recurrenceDay.dayStart, 'p')} - {format(shift.recurrenceDay.dayEnd, 'p')}</span>
 												</div>
 											</div>
 											<div class="flex items-center gap-2">
 												<Badge variant="default">
-													{shift.status}
+													{shift.recurrenceDay.status}
 												</Badge>
-												<Button variant="outline" size="sm">Details</Button>
+												<Button href={`/my-shifts/${shift.workday.id}`} variant="outline" size="sm">Details</Button>
 											</div>
 										</div>
 									{/each}
