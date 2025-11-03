@@ -56,13 +56,8 @@
 	// const canSubmitTimesheet = isPast && (!timesheet || timesheet.status === 'draft');
 	const canCancelShift = isUpcoming && data.workday.recurrenceDay.status === 'FILLED';
 
-	$: console.log({ canCancelShift });
-
-	$: console.log(data);
-	$: console.log('Can cancel shift:', canCancelShift);
 	// UI state
 	let isCancelDialogOpen = false;
-	let cancelReason = '';
 	let isSubmitting = false;
 
 	// Get status badge
@@ -134,7 +129,7 @@
 			<!-- Shift Details Card -->
 			<Card>
 				<CardHeader>
-					<CardTitle class="text-2xl">{data.workday.requisition.title}</CardTitle>
+					<CardTitle class="text-2xl">{data.workday.requisition.disciplineName} <span class="text-xs text-muted-foreground"> - Req# ${data.workday.requisition.id}</span></CardTitle>
 					<CardDescription>{data.workday.requisition.companyName}</CardDescription>
 				</CardHeader>
 				<CardContent class="space-y-6">
@@ -161,10 +156,7 @@
 						<div>
 							<h3 class="font-medium">{data.workday.location.name}</h3>
 							<p class="text-muted-foreground">
-								{data.workday.location.streetOne}
-								{data.workday.location.streetTwo || ''}
-								{data.workday.location.city}, {data.workday.location.state}
-								{data.workday.location.zipcode}
+								{data.workday.location.completeAddress}
 							</p>
 						</div>
 					</div>
@@ -219,7 +211,7 @@
 								on:click={() => (isCancelDialogOpen = true)}
 							>
 								<X class="h-4 w-4" />
-								<span>Cancel Shift</span>
+								<span>Relinquish Shift</span>
 							</Button>
 						{/if}
 					</CardFooter>
