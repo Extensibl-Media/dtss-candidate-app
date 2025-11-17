@@ -2,8 +2,9 @@ import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { recurrenceDayClaimSchema } from '$lib/config/zod-schemas.js';
 import { generateToken } from '$lib/server/utils.js';
 import { fail, redirect } from '@sveltejs/kit';
-import { superValidate } from 'sveltekit-superforms/server';
+import { message, superValidate } from 'sveltekit-superforms/server';
 import type { RequestEvent } from './$types';
+import { setFlash } from 'sveltekit-flash-message/server';
 export const load = async (event) => {
 	event.setHeaders({
 		'cache-control': 'max-age=60'
