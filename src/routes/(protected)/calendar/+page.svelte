@@ -91,7 +91,7 @@
 	<Dialog.Root open={dialogOpen} onOpenChange={() => (dialogOpen = !dialogOpen)}>
 		<Dialog.Content class="max-w-xl overflow-auto h-full md:h-auto">
 			<Dialog.Header>
-				<Dialog.Title class="text-xl text-left font-bold">{selectedEvent?.title}</Dialog.Title>
+				<Dialog.Title class="text-xl text-left font-bold">{selectedEvent?.extendedProps.requisition.disciplineName}</Dialog.Title>
 				<Dialog.Description>
 					<div class="flex items-center gap-3 py-2">
 						{#if selectedEvent?.extendedProps.company.logo}

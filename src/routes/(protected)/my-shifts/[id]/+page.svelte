@@ -199,10 +199,10 @@
 				<!-- Action buttons for upcoming shifts -->
 				{#if isUpcoming}
 					<CardFooter class="flex flex-wrap gap-3 border-t pt-6">
-						<Button variant="outline" class="gap-2">
+						<!-- <Button variant="outline" class="gap-2">
 							<Calendar class="h-4 w-4" />
 							<span>Add to Calendar</span>
-						</Button>
+						</Button> -->
 
 						{#if canCancelShift}
 							<Button

@@ -208,7 +208,7 @@
 								<div class="p-6">
 									<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
 										<div>
-											<h3 class="text-xl font-semibold">{shift.requisition.title}</h3>
+											<h3 class="text-xl font-semibold">{shift.requisition.discipline}</h3>
 											<p class="text-muted-foreground">{shift.requisition.companyName}</p>
 										</div>
 										<div class="flex items-center gap-2">
@@ -241,10 +241,8 @@
 											<div>
 												<p class="font-medium">Location</p>
 												<p class="text-muted-foreground">
-													{shift.location.address1}
-													{shift.location.address2 || ''}
-													{shift.location.city}, {shift.location.state}
-													{shift.location.zip}
+													{shift.location.completeAddress}
+
 												</p>
 											</div>
 										</div>
@@ -321,15 +319,12 @@
 										</div>
 									</td>
 
-									<td class="py-4 px-4">{shift.requisition.title}</td>
+									<td class="py-4 px-4">{shift.requisition.discipline}</td>
 
 									<td class="py-4 px-4">
 										<div>{shift.requisition.companyName}</div>
 										<div class="text-xs text-muted-foreground truncate max-w-[200px]">
-											{shift.location.address1}
-											{shift.location.address2 || ''}
-											{shift.location.city}, {shift.location.state}
-											{shift.location.zip}
+											{shift.location.completeAddress}
 										</div>
 									</td>
 

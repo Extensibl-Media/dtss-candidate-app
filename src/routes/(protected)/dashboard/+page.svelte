@@ -26,16 +26,31 @@
 		CalendarClock,
 		DollarSign,
 		FileText,
-		Calendar
+		Calendar,
+		CalendarCheck,
+		CalendarSearch,
+		Building,
+		CircleDollarSign,
+		GraduationCap,
+		MapPin,
+		Tag
 	} from 'lucide-svelte';
 	import type { PageData } from './$types';
-	import { format } from 'date-fns';
+	import { format, isPast } from 'date-fns';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import type { SuperValidated } from 'sveltekit-superforms';
+	import type { RecurrenceDayClaimSchema } from '$lib/config/zod-schemas';
+	import { superForm } from 'sveltekit-superforms/client';
 
 	// Mock data - replace with your actual data
 	export let data: PageData;
+	let dialogOpen: boolean = false;
+
+	let selectedShift = null
 	$: user = data.user;
 	$: workdays = data.workdays;
 	$: timesheets = data.timesheets;
+	$: requisitions = data.requisitions;
 
 	// Helper function to format date
 	// function formatDate(dateString) {
@@ -69,6 +84,26 @@
 	}
 
 	$: console.log('Workdays:', workdays);
+
+	const viewShiftDetails = (shift) => {
+      selectedShift = shift;
+      dialogOpen = true;
+    };
+
+	const closeDialog = () => {
+      dialogOpen = false;
+      selectedShift = null;
+    };
+
+	export let applyForm: SuperValidated<RecurrenceDayClaimSchema>;
+	const { enhance, submitting } = superForm(applyForm, {
+		onResult: ({ result }) => {
+			console.log(result);
+			if (result.type === 'success') {
+				dialogOpen = false;
+			}
+		}
+	});
 </script>
 
 <svelte:head>
@@ -87,18 +122,66 @@
 		<!-- Left Column -->
 		<div class="lg:col-span-2 space-y-6">
 			<!-- Tabs for Shifts and Timesheets -->
-			<Tabs value="shifts" class="w-full">
-				<TabsList class="grid w-full grid-cols-2 h-fit">
-					<TabsTrigger value="shifts" class="flex items-center gap-2 col-span-2 sm:col-span-1">
+			<Tabs value="requisitions" class="w-full">
+				<TabsList class="grid w-full grid-cols-3 h-fit">
+					<TabsTrigger value="requisitions" class="flex items-center gap-2 col-span-3 sm:col-span-1">
+						<CalendarSearch class="h-4 w-4" />
+						Available Shifts
+					</TabsTrigger>
+					<TabsTrigger value="shifts" class="flex items-center gap-2 col-span-3 sm:col-span-1">
 						<CalendarClock class="h-4 w-4" />
 						Upcoming Shifts
 					</TabsTrigger>
-					<TabsTrigger value="timesheets" class="flex items-center gap-2 col-span-2 sm:col-span-1">
+					<TabsTrigger value="timesheets" class="flex items-center gap-2 col-span-3 sm:col-span-1">
 						<Clipboard class="h-4 w-4" />
 						Pending Timesheets
 					</TabsTrigger>
 				</TabsList>
 
+				<!-- Requisitions Tab -->
+				<TabsContent value="requisitions" class="pt-4">
+					<Card>
+						<CardContent class="p-0">
+							{#if requisitions.length === 0}
+								<div class="text-center py-6">
+									<p class="text-muted-foreground">No available shifts</p>
+								</div>
+							{:else}
+								<div class="divide-y">
+									{#each requisitions as requisition}
+										<div
+											class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+										>
+											<div class="space-y-1">
+												<div class="font-medium">{requisition.requisition.disciplineName} <span class="text-xs text-gray-500">#{requisition.requisition.id}</span></div>
+												<p class="text-sm text-muted-foreground">
+													{requisition.company.name} • {requisition.location?.name || 'Location Not Provided'}
+												</p>
+												<div class="flex items-center gap-2 text-sm">
+													<CalendarDays class="h-3.5 w-3.5 text-muted-foreground" />
+													<span>{format(requisition.recurrenceDay.date, 'PP')}</span>
+													<Clock class="h-3.5 w-3.5 ml-2 text-muted-foreground" />
+													<span>{format(requisition.recurrenceDay.startTime, 'p')} - {format(requisition.recurrenceDay.endTime, 'p')}</span>
+												</div>
+											</div>
+											<div class="flex items-center gap-2">
+												<Badge variant="default">
+													{requisition.recurrenceDay.status}
+												</Badge>
+												<Button on:click={() => viewShiftDetails(requisition)} variant="outline" size="sm">Details</Button>
+											</div>
+										</div>
+									{/each}
+								</div>
+							{/if}
+						</CardContent>
+						<CardFooter class="px-6 py-4 border-t">
+							<Button href="/calendar" variant="ghost" size="sm" class="ml-auto gap-1">
+								View Calendar <ChevronRight class="h-4 w-4" />
+							</Button>
+						</CardFooter>
+					</Card>
+				</TabsContent>
 				<!-- Shifts Tab -->
 				<TabsContent value="shifts" class="pt-4">
 					<Card>
@@ -114,7 +197,7 @@
 											class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
 										>
 											<div class="space-y-1">
-												<div class="font-medium">{shift.requisition.title} <span class="text-xs text-gray-500">#{shift.requisition.id}</span></div>
+												<div class="font-medium">{shift.requisition.discipline} <span class="text-xs text-gray-500">#{shift.requisition.id}</span></div>
 												<p class="text-sm text-muted-foreground">
 													{shift.company.companyName} • {shift.location?.name || 'Location Not Provided'}
 												</p>
@@ -446,3 +529,145 @@
 		</div>
 	</div>
 </section>
+
+<Dialog.Root open={dialogOpen} onOpenChange={() => (dialogOpen = !dialogOpen)}>
+		<Dialog.Content class="max-w-xl overflow-auto h-full md:h-auto">
+			<Dialog.Header>
+				<Dialog.Title class="text-xl text-left font-bold">{selectedShift?.requisition.disciplineName}</Dialog.Title>
+				<Dialog.Description>
+					<div class="flex items-center gap-3 py-2">
+						{#if selectedShift?.company.logo}
+                           <img
+                                   src={selectedShift?.company.logo}
+                                   alt={`${selectedShift?.company.name} logo`}
+                                   class="w-12 h-12 rounded-lg shadow-lg object-cover"
+                           />
+                       {:else}
+                           <div class="h-12 w-12 flex items-center justify-center bg-gray-100 text-gray-400 rounded-lg">
+                               <Building class="h-8 w-8"/>
+                           </div>
+                       {/if}
+						<div class="flex flex-col">
+							<span class="font-medium">{selectedShift?.company.name}</span>
+						</div>
+					</div>
+				</Dialog.Description>
+			</Dialog.Header>
+
+
+				<div class="space-y-6 py-4">
+					<div class="space-y-3">
+						<p class="font-semibold text-lg">Schedule Details</p>
+						<div class="space-y-2">
+							<div class="flex items-center gap-2 text-gray-600">
+								<CalendarDays size={18} />
+								<span
+									>{new Date(selectedShift?.recurrenceDay.startTime).toLocaleDateString('en-US', {
+										weekday: 'long',
+										year: 'numeric',
+										month: 'long',
+										day: 'numeric'
+									})}</span
+								>
+							</div>
+							<div class="flex items-center gap-2 text-gray-600">
+								<Clock size={18} />
+								<span>
+									{new Date(selectedShift?.recurrenceDay.startTime).toLocaleTimeString('en-US', {
+										hour: 'numeric',
+										minute: '2-digit',
+										hour12: true
+									})} - {new Date(selectedShift?.recurrenceDay.endTime).toLocaleTimeString('en-US', {
+										hour: 'numeric',
+										minute: '2-digit',
+										hour12: true
+									})}
+								</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="space-y-3">
+						<p class="font-semibold text-lg">Position Details</p>
+						<div class="space-y-3">
+							<p class="font-semibold text-lg">Requirements</p>
+							<div class="space-y-2">
+								{#if selectedShift?.requisition.disciplineName}
+									<div class="flex items-center gap-2 text-gray-600">
+										<Briefcase size={18} />
+										<span>{selectedShift?.requisition.disciplineName}</span>
+									</div>
+								{/if}
+								{#if selectedShift?.requisition.experienceLevelName}
+									<div class="flex items-center gap-2 text-gray-600">
+										<GraduationCap size={18} />
+										<span>{selectedShift?.requisition.experienceLevelName}</span>
+									</div>
+								{/if}
+							</div>
+</div>
+						<div class="grid grid-cols-2 gap-4">
+							<div class="flex items-center gap-2 text-gray-600">
+								<CircleDollarSign size={18} />
+								<span>${selectedShift?.requisition.hourlyRate}/hr</span>
+							</div>
+							<div class="flex items-center gap-2 text-gray-600">
+								<Tag size={18} />
+								<Badge
+									variant={selectedShift?.recurrenceDay.status === 'OPEN'
+										? 'default'
+										: 'secondary'}
+								>
+									{selectedShift?.recurrenceDay.status}
+								</Badge>
+							</div>
+						</div>
+					</div>
+
+					{#if selectedShift?.location}
+						<div class="space-y-3">
+							<p class="font-semibold text-lg">Location</p>
+							<div class="flex items-center gap-2 text-gray-600">
+								<MapPin size={18} />
+								<div>
+									<p>
+										{selectedShift?.location.name}
+									</p>
+									<p class="text-sm text-gray-600">
+										{selectedShift?.location.completeAddress}
+									</p>
+								</div>
+							</div>
+						</div>
+					{/if}
+				</div>
+
+				<Dialog.Footer class="flex gap-2 justify-end">
+					<Button variant="outline" type="button" on:click={() => (dialogOpen = false)}>
+						Close
+					</Button>
+					{#if !isPast(new Date(selectedShift?.recurrenceDay.startTime)) && selectedShift?.recurrenceDay.status === 'OPEN'}
+						<form method="POST" action="?/claimWorkdayShift" use:enhance>
+							<input
+								type="hidden"
+								name="recurrenceDayId"
+								value={selectedShift?.recurrenceDay.id}
+							/>
+							<Button
+								class="bg-blue-800 hover:bg-blue-900 w-full md:w-fit"
+								type="submit"
+								disabled={selectedShift?.recurrenceDay.status !== 'OPEN' ||
+									$submitting }
+							>
+								{#if $submitting}
+									Claiming...
+								{:else}
+									{selectedShift?.recurrenceDay.status === 'OPEN' && 'Claim Shift'}
+								{/if}
+							</Button>
+						</form>
+					{/if}
+				</Dialog.Footer>
+
+		</Dialog.Content>
+	</Dialog.Root>
