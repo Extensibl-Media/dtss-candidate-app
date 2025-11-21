@@ -10,7 +10,8 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Separator } from '$lib/components/ui/separator';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
-	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 	import {
 		CalendarDays,
 		Clock,
@@ -26,58 +27,197 @@
 		Printer,
 		Clipboard,
 		AlertTriangle,
-		XCircle
+		XCircle,
+		Edit,
+		Save
 	} from 'lucide-svelte';
 	import type { PageData } from './$types';
-	import { format, parseISO, isValid, addDays } from 'date-fns';
-	import { cn } from '$lib/utils';
 	import {
-		AlertDialog,
-		AlertDialogTrigger,
-		AlertDialogContent,
-		AlertDialogHeader,
-		AlertDialogTitle,
-		AlertDialogDescription,
-		AlertDialogFooter
-	} from '$lib/components/ui/alert-dialog';
+		format,
+		parseISO,
+		isValid,
+		addDays,
+		eachDayOfInterval,
+		startOfWeek,
+		endOfWeek
+	} from 'date-fns';
+	import { cn } from '$lib/utils';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { enhance } from '$app/forms';
-	// import { onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
 	export let data: PageData;
 
 	let cancelDialogOpen = false;
 	let verifyDialogOpen = false;
+	let submitDialogOpen = false;
+	let isEditing = false;
+	let initialLoadDone = false;
 
 	$: timesheet = data.timesheet;
 	$: requisition = data.requisition;
 	$: company = data.company;
 	$: recurrenceDay = data.recurrenceDay;
+	$: workday = data.workday;
 
-	// Format dates for display
+	// ✅ Initialize time entries from existing timesheet or create empty ones
+	let timeEntries: Record<string, { startTime: string; endTime: string; hours: number }> = {};
+
+	// ✅ Calculate week dates
 	$: weekBeginDate = parseISO(timesheet.weekBeginDate);
-	$: weekEndDate = addDays(weekBeginDate, 6);
+	$: weekEndDate = endOfWeek(weekBeginDate);
+	$: weekDays = eachDayOfInterval({ start: weekBeginDate, end: weekEndDate });
 	$: formattedWeekRange = isValid(weekBeginDate)
 		? `${format(weekBeginDate, 'MMM d')} - ${format(weekEndDate, 'MMM d, yyyy')}`
 		: 'Invalid date range';
 
-	// Function to correctly format a full date with timezone handling
-	function formatFullDate(dateString) {
+	$: workdayDates = data.workdays
+		? data.workdays.map((wd: any) => wd.recurrenceDay.date)
+		: [recurrenceDay?.date].filter(Boolean);
+
+	$: scheduledWorkDays = workdayDates
+		.map((dateStr: string) => {
+			const date = parseISO(dateStr);
+			return {
+				date,
+				dateKey: format(date, 'yyyy-MM-dd'),
+				dayString: format(date, 'EEE, MMM d')
+			};
+		})
+		.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+	// ✅ Initialize entries for all scheduled workdays
+	$: {
+		if (scheduledWorkDays.length > 0 && !initialLoadDone) {
+			scheduledWorkDays.forEach(({ dateKey }) => {
+				if (!timeEntries[dateKey]) {
+					timeEntries[dateKey] = { startTime: '', endTime: '', hours: 0 };
+				}
+			});
+		}
+	}
+
+	// ✅ Function to load time entries
+	function loadTimeEntries() {
+		// First, initialize all scheduled days with empty values
+		scheduledWorkDays.forEach(({ dateKey }) => {
+			timeEntries[dateKey] = { startTime: '', endTime: '', hours: 0 };
+		});
+
+		// Then, load existing data
+		if (timesheet?.hoursRaw && Array.isArray(timesheet.hoursRaw) && timesheet.hoursRaw.length > 0) {
+			timesheet.hoursRaw.forEach((entry: any) => {
+				const dateKey = entry.date;
+
+				const startTime = entry.startTime
+					? new Date(entry.startTime).toLocaleTimeString('en-US', {
+							hour12: false,
+							hour: '2-digit',
+							minute: '2-digit'
+						})
+					: '';
+
+				const endTime = entry.endTime
+					? new Date(entry.endTime).toLocaleTimeString('en-US', {
+							hour12: false,
+							hour: '2-digit',
+							minute: '2-digit'
+						})
+					: '';
+
+				if (timeEntries[dateKey]) {
+					timeEntries[dateKey] = {
+						startTime,
+						endTime,
+						hours: entry.hours || 0
+					};
+				}
+			});
+		}
+
+		timeEntries = { ...timeEntries };
+	}
+
+	// ✅ Only load once on mount
+	onMount(() => {
+		loadTimeEntries();
+		initialLoadDone = true;
+	});
+
+	// ✅ Calculate total hours
+	$: totalHours = Object.values(timeEntries).reduce((sum, entry) => sum + (entry.hours || 0), 0);
+
+	// ✅ Check if form is valid
+	$: hasHoursEntered = Object.values(timeEntries).some((entry) => entry.hours > 0);
+	$: isDraft = timesheet?.status === 'DRAFT';
+	$: isPending = timesheet?.status === 'PENDING';
+	$: isDiscrepancy = timesheet?.status === 'DISCREPANCY';
+	$: isApproved = timesheet?.status === 'APPROVED';
+	$: isVoid = timesheet?.status === 'VOID';
+	$: isRejected = timesheet?.status === 'REJECTED';
+
+	// ✅ Can edit if DRAFT or DISCREPANCY (when editing mode is on)
+	$: canEdit = isDraft || (isDiscrepancy && isEditing);
+	$: showEditButton = isDiscrepancy && !isEditing;
+
+	function calculateHours(startTime: string, endTime: string): number {
+		if (!startTime || !endTime) return 0;
+		const [startHour, startMin] = startTime.split(':').map(Number);
+		const [endHour, endMin] = endTime.split(':').map(Number);
+		const hours = endHour - startHour + (endMin - startMin) / 60;
+		return Math.round(hours * 100) / 100;
+	}
+
+	function updateTimeEntry(dateKey: string, field: 'startTime' | 'endTime', value: string) {
+		if (!timeEntries[dateKey]) {
+			timeEntries[dateKey] = { startTime: '', endTime: '', hours: 0 };
+		}
+
+		timeEntries[dateKey][field] = value;
+		timeEntries[dateKey].hours = calculateHours(
+			timeEntries[dateKey].startTime,
+			timeEntries[dateKey].endTime
+		);
+
+		// Force reactivity
+		timeEntries = { ...timeEntries };
+	}
+
+	function enableEditing() {
+		isEditing = true;
+	}
+
+	function cancelEditing() {
+		isEditing = false;
+		loadTimeEntries();
+	}
+
+	function safeFormatDate(date: any, formatStr: string = 'hh:mm a'): string {
+		if (!date) return 'N/A';
+
+		try {
+			const parsedDate = typeof date === 'string' ? new Date(date) : date;
+			if (!isValid(parsedDate)) {
+				return 'N/A';
+			}
+			return format(parsedDate, formatStr);
+		} catch (error) {
+			console.error('Error formatting date:', error, date);
+			return 'N/A';
+		}
+	}
+
+	function formatFullDate(dateString: string) {
 		if (!dateString) return 'N/A';
 
 		try {
-			// Parse the input date string correctly
-			const date =
-				typeof dateString === 'string'
-					? parseISO(dateString) // Use parseISO for ISO strings
-					: new Date(dateString); // Fallback for other formats
+			const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
 
-			// Ensure the date is valid
 			if (!isValid(date)) {
 				console.error('Invalid date:', dateString);
 				return 'Invalid Date';
 			}
 
-			// Format with browser's locale settings
 			return date.toLocaleDateString('en-US', {
 				weekday: 'long',
 				year: 'numeric',
@@ -90,96 +230,32 @@
 		}
 	}
 
-	// Debug helper to troubleshoot date issues
-	// function debugDate(dateStr) {
-	// 	try {
-	// 		console.log('Debug date:', {
-	// 			input: dateStr,
-	// 			parsed: parseISO(dateStr),
-	// 			asDate: new Date(dateStr),
-	// 			formatted: format(parseISO(dateStr), 'yyyy-MM-dd')
-	// 		});
-	// 	} catch (error) {
-	// 		console.error('Debug date error:', error);
-	// 	}
-	// }
-
-	// // Add this in your onMount or component initialization
-	// onMount(() => {
-	// 	// Debug the timesheet dates
-	// 	if (timesheet) {
-	// 		debugDate(timesheet.weekBeginDate);
-	// 		console.log('Timesheet raw data:', timesheet);
-
-	// 		if (timesheet.hoursRaw && timesheet.hoursRaw.length > 0) {
-	// 			timesheet.hoursRaw.forEach((entry) => {
-	// 				debugDate(entry.date);
-	// 			});
-	// 		}
-	// 	}
-	// });
-
-	// Get status badge for timesheet
-	function getTimesheetStatusBadge(timesheet) {
-		if (!timesheet) return { text: 'Loading...', icon: Clock };
-
-		if (timesheet.status === 'APPROVED' && !timesheet.awaitingClientSignature) {
-			return { text: 'APPROVED', icon: CheckCircle2 };
-		} else if (timesheet.status === 'PENDING') {
-			return { text: 'PENDING', icon: AlertCircle };
-		} else if (timesheet.status === 'DISCREPANCY') {
-			return { text: 'DISCREPANCY', icon: AlertTriangle };
-		} else if (timesheet.status === 'VOID') {
-			return { text: 'VOID', icon: X };
-		} else if (timesheet.status === 'REJECTED') {
-			return { text: 'REJECTED', icon: X };
-		}
-	}
-
-	// Format time (8:00 AM - 4:00 PM)
-	function formatTimeRange(startTime, endTime) {
-		if (!startTime || !endTime) return 'N/A';
-
-		const formatTime = (time) => {
-			const [hours, minutes] = time.split(':');
-			const hour = parseInt(hours);
-			const ampm = hour >= 12 ? 'PM' : 'AM';
-			const hour12 = hour % 12 || 12;
-			return `${hour12}:${minutes || '00'} ${ampm}`;
+	function getTimesheetStatusBadge(status: string) {
+		const badges: Record<string, { text: string; icon: any; class: string }> = {
+			DRAFT: { text: 'DRAFT', icon: Edit, class: 'bg-gray-300 hover:bg-gray-400' },
+			PENDING: { text: 'PENDING', icon: AlertCircle, class: 'bg-yellow-300 hover:bg-yellow-400' },
+			DISCREPANCY: {
+				text: 'DISCREPANCY',
+				icon: AlertTriangle,
+				class: 'bg-orange-400 hover:bg-orange-500'
+			},
+			APPROVED: { text: 'APPROVED', icon: CheckCircle2, class: 'bg-green-400 hover:bg-green-600' },
+			VOID: { text: 'VOID', icon: X, class: 'bg-gray-200 hover:bg-gray-300' },
+			REJECTED: { text: 'REJECTED', icon: XCircle, class: 'bg-red-500 hover:bg-red-600' }
 		};
 
-		// Handle cases where time might include timezone info
-		const cleanStartTime = startTime.split('-')[0];
-		const cleanEndTime = endTime.split('-')[0];
-
-		return `${formatTime(cleanStartTime)} - ${formatTime(cleanEndTime)}`;
+		return badges[status] || badges.DRAFT;
 	}
 
-	// Calculate net hours (considering lunch break)
-	function calculateNetHours(startTime, endTime, lunchStartTime, lunchEndTime) {
-		if (!startTime || !endTime || !lunchStartTime || !lunchEndTime) return 'N/A';
+	$: statusBadge = getTimesheetStatusBadge(timesheet?.status || 'DRAFT');
 
-		const parseTimeToMinutes = (timeStr) => {
-			const [hours, minutes] = timeStr.split(':').map(Number);
-			return hours * 60 + minutes;
-		};
-
-		// Clean up time strings to remove timezone info if present
-		const cleanStartTime = startTime.split('-')[0];
-		const cleanEndTime = endTime.split('-')[0];
-		const cleanLunchStartTime = lunchStartTime.split('-')[0];
-		const cleanLunchEndTime = lunchEndTime.split('-')[0];
-
-		const dayStart = parseTimeToMinutes(cleanStartTime);
-		const dayEnd = parseTimeToMinutes(cleanEndTime);
-		const lunchStart = parseTimeToMinutes(cleanLunchStartTime);
-		const lunchEnd = parseTimeToMinutes(cleanLunchEndTime);
-
-		const totalWorkMinutes = dayEnd - dayStart - (lunchEnd - lunchStart);
-		return (totalWorkMinutes / 60).toFixed(2);
+	// ✅ Debug logging
+	$: {
+		console.log('Time entries:', timeEntries);
+		console.log('Total hours:', totalHours);
+		console.log('Has hours entered:', hasHoursEntered);
+		console.log('recurrence day',recurrenceDay)
 	}
-
-	$: statusBadge = getTimesheetStatusBadge(timesheet);
 </script>
 
 <svelte:head>
@@ -194,34 +270,27 @@
 			<span>Back to Timesheets</span>
 		</Button>
 
-		<div class="flex gap-2">
-			<Button variant="outline" size="sm" class="gap-1">
-				<Printer class="w-4 h-4" />
-				<span class="hidden sm:inline">Print</span>
-			</Button>
-			<Button variant="outline" size="sm" class="gap-1">
-				<Download class="w-4 h-4" />
-				<span class="hidden sm:inline">Download</span>
-			</Button>
-		</div>
+		{#if !isDraft}
+			<div class="flex gap-2">
+				<Button variant="outline" size="sm" class="gap-1">
+					<Printer class="w-4 h-4" />
+					<span class="hidden sm:inline">Print</span>
+				</Button>
+				<Button variant="outline" size="sm" class="gap-1">
+					<Download class="w-4 h-4" />
+					<span class="hidden sm:inline">Download</span>
+				</Button>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Timesheet Header -->
 	<div>
 		<div class="flex flex-wrap items-center gap-3">
 			<h1 class="text-2xl font-bold">Timesheet</h1>
-			<Badge
-				variant="default"
-				class={cn(
-					timesheet.status === 'PENDING' && 'bg-yellow-300 hover:bg-yellow-400',
-					timesheet.status === 'DISCREPANCY' && 'bg-orange-400 hover:bg-bg-orange-500',
-					timesheet.status === 'APPROVED' && 'bg-green-400 hover:bg-green-600',
-					timesheet.status === 'VOID' && 'bg-gray-200 hover:bg-gray-300',
-					timesheet.status === 'REJECTED' && 'bg-red-500 hover:bg-red-500',
-					'gap-1'
-				)}
-			>
-				{timesheet.status}
+			<Badge variant="default" class={cn(statusBadge.class, 'gap-1')}>
+				<svelte:component this={statusBadge.icon} class="h-3 w-3" />
+				{statusBadge.text}
 			</Badge>
 		</div>
 		<p class="text-muted-foreground flex items-center mt-1">
@@ -247,12 +316,7 @@
 						</div>
 						<div>
 							<h3 class="font-medium">Pay Information</h3>
-							<p class="text-muted-foreground">
-								Base Rate: ${timesheet?.candidateRateBase || 0}/hr
-							</p>
-							<p class="text-muted-foreground">
-								Overtime Rate: ${timesheet?.candidateRateOT || 0}/hr
-							</p>
+							<p class="text-muted-foreground">Base Rate: ${requisition?.hourlyRate || 0}/hr</p>
 						</div>
 					</div>
 
@@ -264,126 +328,189 @@
 						<div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
 							<div class="p-3 bg-gray-50 rounded-lg">
 								<p class="text-sm text-gray-600">Total Hours</p>
-								<p class="text-xl font-bold">{timesheet?.totalHoursWorked || 0}</p>
+								<p class="text-xl font-bold">{totalHours.toFixed(2)}</p>
 							</div>
 							<div class="p-3 bg-gray-50 rounded-lg">
 								<p class="text-sm text-gray-600">Regular Hours</p>
-								<p class="text-xl font-bold">{timesheet?.totalHoursWorked || 0}</p>
+								<p class="text-xl font-bold">{Math.min(totalHours, 40).toFixed(2)}</p>
 							</div>
 							<div class="p-3 bg-gray-50 rounded-lg">
 								<p class="text-sm text-gray-600">Overtime</p>
-								<p class="text-xl font-bold">0</p>
+								<p class="text-xl font-bold">{Math.max(0, totalHours - 40).toFixed(2)}</p>
 							</div>
 						</div>
 					</div>
 				</CardContent>
 			</Card>
 
-			<!-- Tabs for different sections -->
-			<Tabs class="w-full">
-				<TabsList class="grid grid-cols-2 w-full max-w-md">
-					<TabsTrigger value="hours">Daily Hours</TabsTrigger>
-					<TabsTrigger value="details">Shift Details</TabsTrigger>
-				</TabsList>
+			<!-- Hours Entry/Display -->
+			<Card>
+				<CardHeader>
+					<div class="flex items-center justify-between">
+						<div>
+							<CardTitle>Daily Hours</CardTitle>
+							<CardDescription>
+								{canEdit ? 'Enter your hours for scheduled workdays' : 'Hours worked'}
+							</CardDescription>
+						</div>
+						<div class="flex gap-2">
+							{#if canEdit}
+								<Badge variant="secondary" class="gap-1">
+									<Edit class="h-3 w-3" />
+									Editable
+								</Badge>
+							{/if}
+							{#if showEditButton}
+								<Button size="sm" variant="outline" on:click={enableEditing}>
+									<Edit class="h-4 w-4 mr-2" />
+									Edit Hours
+								</Button>
+							{/if}
+						</div>
+					</div>
+				</CardHeader>
 
-				<TabsContent value="hours" class="space-y-4 pt-4">
-					<Card>
-						<CardHeader>
-							<CardTitle>Hours Worked</CardTitle>
-							<CardDescription>Breakdown of hours for the week</CardDescription>
-						</CardHeader>
+				<CardContent>
+					{#if canEdit}
+						<!-- ✅ EDIT MODE: Editable time entries -->
+						{#if scheduledWorkDays.length > 0}
+							<div class="space-y-4">
+								<div
+									class="grid grid-cols-4 gap-2 items-center px-2 text-xs font-medium text-gray-500"
+								>
+									<span>Date</span>
+									<span>Start Time</span>
+									<span>End Time</span>
+									<span class="text-right">Hours</span>
+								</div>
 
-						<CardContent>
-							{#if timesheet?.hoursRaw && timesheet.hoursRaw.length > 0}
-								<div class="divide-y">
-									{#each timesheet.hoursRaw as entry}
-										<div class="py-3 flex items-center justify-between">
-											<div>
-												<p class="font-medium">{formatFullDate(entry.date)}</p>
-												<p class="text-sm text-muted-foreground">
-													{format(entry.startTime, 'hh:mm a')} - {format(entry.endTime, 'hh:mm a')}
-												</p>
+								{#each scheduledWorkDays as { dateKey, dayString }}
+									{#if timeEntries[dateKey]}
+										<div class="grid grid-cols-4 gap-2 items-center p-3 bg-gray-50 rounded-lg">
+											<div class="text-sm font-medium">
+												{dayString}
 											</div>
-											<div class="text-right">
-												<p class="text-lg font-semibold">{entry.hours} hrs</p>
+											<Input
+												type="time"
+												class="text-sm"
+												value={timeEntries[dateKey].startTime}
+												on:input={(e) => updateTimeEntry(dateKey, 'startTime', e.currentTarget.value)}
+											/>
+											<Input
+												type="time"
+												class="text-sm"
+												value={timeEntries[dateKey].endTime}
+												on:input={(e) => updateTimeEntry(dateKey, 'endTime', e.currentTarget.value)}
+											/>
+											<div class="text-right text-sm font-semibold">
+												{timeEntries[dateKey]?.hours?.toFixed(2) || '0.00'} hrs
 											</div>
 										</div>
-									{/each}
-								</div>
-							{:else}
-								<div class="py-12 text-center text-muted-foreground">
-									<Clipboard class="h-12 w-12 mx-auto mb-3" />
-									<p>No hours recorded for this timesheet</p>
-								</div>
-							{/if}
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent value="details" class="space-y-4 pt-4">
-					<Card>
-						<CardHeader>
-							<CardTitle>Shift Information</CardTitle>
-							<CardDescription>Details about the work assignment</CardDescription>
-						</CardHeader>
-
-						<CardContent class="space-y-4">
-							<!-- Date and Time -->
-							<div class="flex items-start gap-4">
-								<div class="bg-blue-100 rounded-full p-2.5">
-									<CalendarDays class="h-5 w-5 text-blue-700" />
-								</div>
-								<div>
-									<h3 class="font-medium">Date & Schedule</h3>
-									{#if recurrenceDay}
-										<p class="text-muted-foreground">{formatFullDate(recurrenceDay.date)}</p>
-										<p class="text-muted-foreground">
-											Work Hours: {format(recurrenceDay.dayStartTime, 'hh:mm a')} - {format(
-												recurrenceDay.dayEndTime,
-												'hh:mm a'
-											)}
-										</p>
-										<p class="text-muted-foreground">
-											Lunch Break: {format(recurrenceDay.lunchStartTime, 'hh:mm a')} - {format(
-												recurrenceDay.lunchEndTime,
-												'hh:mm a'
-											)}
-										</p>
-									{:else}
-										<p class="text-muted-foreground">Schedule information not available</p>
 									{/if}
-								</div>
+								{/each}
+
+								{#if isDiscrepancy && isEditing}
+									<div class="flex justify-end pt-2">
+										<Button variant="outline" size="sm" on:click={cancelEditing}>
+											Cancel Editing
+										</Button>
+									</div>
+								{/if}
 							</div>
-
-							<!-- Job Description -->
-							{#if requisition?.jobDescription}
-								<div class="flex items-start gap-4">
-									<div class="bg-blue-100 rounded-full p-2.5">
-										<Info class="h-5 w-5 text-blue-700" />
+						{:else}
+							<div class="py-12 text-center text-muted-foreground">
+								<AlertCircle class="h-12 w-12 mx-auto mb-3" />
+								<p>No scheduled workdays found for this week</p>
+							</div>
+						{/if}
+					{:else}
+						<!-- ✅ VIEW MODE: Display submitted hours -->
+						{#if timesheet?.hoursRaw && timesheet.hoursRaw.length > 0}
+							<div class="divide-y">
+								{#each timesheet.hoursRaw as entry}
+									<div class="py-3 flex items-center justify-between">
+										<div>
+											<p class="font-medium">{formatFullDate(entry.date)}</p>
+											<p class="text-sm text-muted-foreground">
+												{safeFormatDate(entry.startTime)} - {safeFormatDate(entry.endTime)}
+											</p>
+										</div>
+										<div class="text-right">
+											<p class="text-lg font-semibold">{entry.hours} hrs</p>
+										</div>
 									</div>
-									<div>
-										<h3 class="font-medium">Job Description</h3>
-										<p class="text-muted-foreground whitespace-pre-wrap">
-											{requisition.jobDescription}
-										</p>
-									</div>
-								</div>
-							{/if}
+								{/each}
+							</div>
+						{:else}
+							<div class="py-12 text-center text-muted-foreground">
+								<Clipboard class="h-12 w-12 mx-auto mb-3" />
+								<p>No hours recorded for this timesheet</p>
+							</div>
+						{/if}
+					{/if}
+				</CardContent>
+			</Card>
 
-							<!-- Special Instructions -->
-							{#if requisition?.specialInstructions}
-								<Alert>
-									<Info class="h-4 w-4" />
-									<AlertTitle>Special Instructions</AlertTitle>
-									<AlertDescription class="whitespace-pre-wrap">
-										{requisition.specialInstructions}
-									</AlertDescription>
-								</Alert>
+			<!-- Shift Details -->
+			<Card>
+				<CardHeader>
+					<CardTitle>Shift Information</CardTitle>
+					<CardDescription>Details about the work assignment</CardDescription>
+				</CardHeader>
+
+				<CardContent class="space-y-4">
+					<!-- Date and Time -->
+					<div class="flex items-start gap-4">
+						<div class="bg-blue-100 rounded-full p-2.5">
+							<CalendarDays class="h-5 w-5 text-blue-700" />
+						</div>
+						<div>
+							<h3 class="font-medium">Date & Schedule</h3>
+							{#if recurrenceDay}
+								<p class="text-muted-foreground">{formatFullDate(recurrenceDay.date)}</p>
+								<p class="text-muted-foreground">
+									Work Hours: {safeFormatDate(recurrenceDay.dayStartTime)} - {safeFormatDate(
+										recurrenceDay.dayEndTime
+									)}
+								</p>
+								<p class="text-muted-foreground">
+									Lunch Break: {safeFormatDate(recurrenceDay.lunchStartTime)} - {safeFormatDate(
+										recurrenceDay.lunchEndTime
+									)}
+								</p>
+							{:else}
+								<p class="text-muted-foreground">Schedule information not available</p>
 							{/if}
-						</CardContent>
-					</Card>
-				</TabsContent>
-			</Tabs>
+						</div>
+					</div>
+
+					<!-- Job Description -->
+					{#if requisition?.jobDescription}
+						<div class="flex items-start gap-4">
+							<div class="bg-blue-100 rounded-full p-2.5">
+								<Info class="h-5 w-5 text-blue-700" />
+							</div>
+							<div>
+								<h3 class="font-medium">Job Description</h3>
+								<p class="text-muted-foreground whitespace-pre-wrap">
+									{requisition.jobDescription}
+								</p>
+							</div>
+						</div>
+					{/if}
+
+					<!-- Special Instructions -->
+					{#if requisition?.specialInstructions}
+						<Alert>
+							<Info class="h-4 w-4" />
+							<AlertTitle>Special Instructions</AlertTitle>
+							<AlertDescription class="whitespace-pre-wrap">
+								{requisition.specialInstructions}
+							</AlertDescription>
+						</Alert>
+					{/if}
+				</CardContent>
+			</Card>
 		</div>
 
 		<!-- Sidebar -->
@@ -423,94 +550,146 @@
 				</CardHeader>
 				<CardContent class="space-y-4">
 					<p class="text-sm text-muted-foreground">
-						{#if timesheet?.status === 'PENDING'}
+						{#if isDraft}
+							Fill in your hours and submit your timesheet for approval.
+						{:else if isPending}
 							This timesheet is pending approval.
-						{:else if timesheet?.status === 'DISCREPANCY'}
-							This timesheet has discrepancies that need to be resolved.
-						{:else if timesheet?.status === 'VOID'}
+						{:else if isDiscrepancy}
+							This timesheet has discrepancies. Please review and correct your hours, then
+							resubmit.
+						{:else if isVoid}
 							This timesheet has been voided.
-						{:else if timesheet?.status === 'REJECTED'}
+						{:else if isRejected}
 							This timesheet has been rejected.
-						{:else if timesheet?.status === 'APPROVED'}
+						{:else if isApproved}
 							This timesheet has been approved and processed.
-						{:else}
-							You need to validate this timesheet.
 						{/if}
 					</p>
 
 					<div class="space-y-2">
-						<AlertDialog open={verifyDialogOpen}>
-							<AlertDialogTrigger asChild>
-								<Button
-									disabled={timesheet.status === 'APPROVED' ||
-										timesheet.status === 'PENDING' ||
-										timesheet.status === 'VOID'}
-									class="w-full gap-2 bg-blue-700 hover:bg-blue-800"
-									on:click={() => (verifyDialogOpen = true)}
-								>
-									<CheckCircle2 class="h-4 w-4" />
-									<span>Validate Timesheet</span>
-								</Button>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Validate Timesheet</AlertDialogTitle>
-									<AlertDialogDescription>
-										Submitting this timesheet for validation states that the hours submitted have
-										been reviewed and/or properly amended.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<Button variant="outline" on:click={() => (verifyDialogOpen = false)}
-										>Cancel</Button
+						<!-- ✅ SUBMIT BUTTON (for DRAFT) -->
+						{#if isDraft}
+							<AlertDialog.Root bind:open={submitDialogOpen}>
+								<AlertDialog.Trigger asChild>
+									<Button
+										on:click={() => (submitDialogOpen = true)}
+										disabled={!hasHoursEntered || totalHours === 0}
+										class="w-full gap-2 bg-blue-700 hover:bg-blue-800"
 									>
-									<form action="?/validateTimesheet" method="POST" use:enhance>
-										<Button
-											type="submit"
-											on:click={() => (verifyDialogOpen = false)}
-											variant="default"
-											class="ml-2 bg-green-400 hover:bg-green-500 text-white">Validate</Button
-										>
-									</form>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
+										<Save class="h-4 w-4" />
+										<span>Submit Timesheet</span>
+									</Button>
+								</AlertDialog.Trigger>
+								<AlertDialog.Content>
+									<AlertDialog.Header>
+										<AlertDialog.Title>Submit Timesheet</AlertDialog.Title>
+										<AlertDialog.Description>
+											You're submitting {totalHours.toFixed(2)} hours for the week of {formattedWeekRange}.
+											This will send your timesheet for approval.
+										</AlertDialog.Description>
+									</AlertDialog.Header>
+									<AlertDialog.Footer>
+										<Button variant="outline" on:click={() => (submitDialogOpen = false)}>
+											Cancel
+										</Button>
+										<form action="?/submitTimesheet" method="POST" use:enhance>
+											<input type="hidden" name="entries" value={JSON.stringify(timeEntries)} />
+											<input type="hidden" name="totalHours" value={totalHours} />
+											<Button
+												type="submit"
+												on:click={() => (submitDialogOpen = false)}
+												class="ml-2 bg-blue-700 hover:bg-blue-800"
+											>
+												Submit
+											</Button>
+										</form>
+									</AlertDialog.Footer>
+								</AlertDialog.Content>
+							</AlertDialog.Root>
+						{/if}
 
-						<AlertDialog open={cancelDialogOpen}>
-							<AlertDialogTrigger asChild>
-								<Button
-									on:click={() => (cancelDialogOpen = true)}
-									disabled={timesheet.status === 'APPROVED'}
-									variant="outline"
-									class="w-full border-red-200 text-red-700 hover:bg-red-50 gap-2"
-								>
-									<XCircle class="h-4 w-4" />
-									<span>Cancel Timesheet</span>
-								</Button>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-									<AlertDialogDescription>
-										This action cannot be undone. This timesheet will be deleted permanently.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<Button variant="outline" on:click={() => (cancelDialogOpen = false)}
-										>Cancel</Button
+						<!-- ✅ RESUBMIT BUTTON (for DISCREPANCY after editing) -->
+						{#if isDiscrepancy}
+							<AlertDialog.Root bind:open={verifyDialogOpen}>
+								<AlertDialog.Trigger asChild>
+									<Button
+										on:click={() => (verifyDialogOpen = true)}
+										disabled={!isEditing || !hasHoursEntered || totalHours === 0}
+										class="w-full gap-2 bg-green-600 hover:bg-green-700"
 									>
-									<form action="?/cancelTimesheet" method="POST" use:enhance>
-										<Button
-											type="submit"
-											on:click={() => (cancelDialogOpen = false)}
-											disabled={timesheet.status === 'APPROVED'}
-											variant="destructive"
-											class="ml-2">Reject</Button
-										>
-									</form>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
+										<CheckCircle2 class="h-4 w-4" />
+										<span>Resubmit for Validation</span>
+									</Button>
+								</AlertDialog.Trigger>
+								<AlertDialog.Content>
+									<AlertDialog.Header>
+										<AlertDialog.Title>Resubmit Timesheet</AlertDialog.Title>
+										<AlertDialog.Description>
+											You're resubmitting {totalHours.toFixed(2)} hours for the week of {formattedWeekRange}.
+											This will send your corrected timesheet for validation.
+										</AlertDialog.Description>
+									</AlertDialog.Header>
+									<AlertDialog.Footer>
+										<Button variant="outline" on:click={() => (verifyDialogOpen = false)}>
+											Cancel
+										</Button>
+										<form action="?/resubmitTimesheet" method="POST" use:enhance>
+											<input type="hidden" name="entries" value={JSON.stringify(timeEntries)} />
+											<input type="hidden" name="totalHours" value={totalHours} />
+											<Button
+												type="submit"
+												on:click={() => {
+													verifyDialogOpen = false;
+													isEditing = false;
+												}}
+												class="ml-2 bg-green-600 hover:bg-green-700"
+											>
+												Resubmit
+											</Button>
+										</form>
+									</AlertDialog.Footer>
+								</AlertDialog.Content>
+							</AlertDialog.Root>
+						{/if}
+
+						<!-- ✅ CANCEL BUTTON (for DRAFT or PENDING) -->
+						{#if isDraft || isPending}
+							<AlertDialog.Root bind:open={cancelDialogOpen}>
+								<AlertDialog.Trigger asChild>
+									<Button
+										on:click={() => (cancelDialogOpen = true)}
+										variant="outline"
+										class="w-full border-red-200 text-red-700 hover:bg-red-50 gap-2"
+									>
+										<XCircle class="h-4 w-4" />
+										<span>Cancel Timesheet</span>
+									</Button>
+								</AlertDialog.Trigger>
+								<AlertDialog.Content>
+									<AlertDialog.Header>
+										<AlertDialog.Title>Are you sure?</AlertDialog.Title>
+										<AlertDialog.Description>
+											This action cannot be undone. This timesheet will be voided permanently.
+										</AlertDialog.Description>
+									</AlertDialog.Header>
+									<AlertDialog.Footer>
+										<Button variant="outline" on:click={() => (cancelDialogOpen = false)}>
+											Cancel
+										</Button>
+										<form action="?/cancelTimesheet" method="POST" use:enhance>
+											<Button
+												type="submit"
+												on:click={() => (cancelDialogOpen = false)}
+												variant="destructive"
+												class="ml-2"
+											>
+												Void Timesheet
+											</Button>
+										</form>
+									</AlertDialog.Footer>
+								</AlertDialog.Content>
+							</AlertDialog.Root>
+						{/if}
 					</div>
 				</CardContent>
 			</Card>
