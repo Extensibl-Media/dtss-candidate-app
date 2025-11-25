@@ -243,6 +243,7 @@ export const actions = {
 						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify({
+						timesheetId: timesheetId,
 						userId: user.id,
 						companyId: timesheetData.company.id,
 						weekStartDate: timesheetData.timesheet.weekBeginDate,
