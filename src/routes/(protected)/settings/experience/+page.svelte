@@ -134,6 +134,33 @@
 				Your profile has been approved. You cannot edit your experience at this time.
 			</Alert.Description>
 		</Alert.Root>
+
+		{#each candidateDisciplines as discipline, index}
+			<div class="border rounded-lg p-4 bg-white">
+				<div class="flex items-start justify-between gap-4">
+					<div class="flex-1 min-w-0">
+						<p class="font-medium text-sm text-gray-900 truncate">
+							{getDisciplineName(discipline.disciplineId)}
+						</p>
+						<p class="text-xs text-gray-600 mt-1">
+							{getExperienceLevelValue(discipline.experienceLevelId)}
+						</p>
+					</div>
+
+					<div class="flex items-center gap-3">
+						<div class="text-right flex-shrink-0">
+							<div class="flex items-center gap-1 text-sm font-medium text-gray-900">
+								<DollarSign class="h-4 w-4 text-gray-500"/>
+								<span>
+									{discipline.preferredHourlyMin} - {discipline.preferredHourlyMax}
+								</span>
+							</div>
+							<p class="text-xs text-gray-500 mt-0.5">/hr</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/each}
 {:else}
 
 		<Card.Root class="border-0 sm:border">
