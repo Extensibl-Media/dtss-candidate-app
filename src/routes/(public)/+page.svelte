@@ -20,7 +20,7 @@
 			<div class="flex flex-col md:flex-row items-center">
 				<div class="md:w-1/2 mb-10 md:mb-0">
 					<h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-						Connecting Dental Professionals Within a Private Member Association
+						Connecting Dental Professionals and Practices
 					</h1>
 					<p class="mt-3 text-base text-blue-100 sm:mt-5 sm:text-xl">
 						DentalStaff.US is a secure platform for dental professionals and practices to connect,
@@ -110,11 +110,9 @@
 							/>
 						</svg>
 					</div>
-					<h3 class="text-xl font-bold text-gray-900 mb-2">PMA Benefits</h3>
+					<h3 class="text-xl font-bold text-gray-900 mb-2">Benefits</h3>
 					<p class="text-gray-600">
-						Our ecclesiastic structure provides members with privacy protection and operates under
-						common law principles, creating a trusted environment for professional relationships and
-						business interactions.
+						DentalStaff US provides members with access to verified professionals for aoo your stafing needs, from office assistants to specialized dental practitioners.
 					</p>
 				</div>
 
@@ -320,7 +318,7 @@
 					</h2>
 					<p class="text-muted-foreground mb-6">Dental Staff & Professionals</p>
 					<p class="text-xl text-gray-600 mb-6">
-						Join a private association of dental professionals where you control your schedule,
+						Join a growing platform of dental professionals where you control your schedule,
 						choose your assignments, and connect with practices that value your expertise.
 					</p>
 					<ul class="space-y-4">
@@ -819,7 +817,7 @@
 						DentalStaff<span class="text-blue-400">.US</span>
 					</div>
 					<p class="text-gray-400 mb-4">
-						DentalStaff.US is the property of DentalStaff United a Private Member Association (PMA),
+						DentalStaff.US is the property of DentalStaff United,
 						managed by:
 					</p>
 					<div class="mb-4">
