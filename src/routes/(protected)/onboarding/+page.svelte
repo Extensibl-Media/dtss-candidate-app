@@ -158,24 +158,6 @@
                 </Form.Item>
             </Form.Field>
         </div>
-        <div class="col-span-4">
-            <Form.Field config={{form: form, schema: newProfileSchema}} name="hourlyRateMin">
-                <Form.Item>
-                    <Form.Label>Hourly Rate Min</Form.Label>
-                    <Form.Input type="number" />
-                    <Form.Validation />
-                </Form.Item>
-            </Form.Field>
-        </div>
-        <div class="col-span-4">
-            <Form.Field config={{form: form, schema: newProfileSchema}} name="hourlyRateMax">
-                <Form.Item>
-                    <Form.Label>Hourly Rate Max</Form.Label>
-                    <Form.Input type="number" />
-                    <Form.Validation />
-                </Form.Item>
-            </Form.Field>
-        </div>
         </div>
     </form>
 	</Card.Content>

@@ -233,40 +233,6 @@
 					<input type="hidden" name="lon" value={selectedAddress?.coordinates.lng}/>
 				</div>
 
-				<Separator />
-
-				<!-- Rate Section -->
-				<div class="space-y-4">
-					<h3 class="text-lg font-medium">Hourly Rate Range</h3>
-
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div class="space-y-2">
-							<Form.Field config={{ form: form, schema: updateProfileSchema }} name="hourlyRateMin">
-								<Form.Item>
-									<Form.Label>Hourly Rate Min</Form.Label>
-									<Form.Input type="number" />
-									<Form.Validation />
-								</Form.Item>
-							</Form.Field>
-						</div>
-
-						<div class="space-y-2">
-							<Form.Field config={{ form: form, schema: updateProfileSchema }} name="hourlyRateMax">
-								<Form.Item>
-									<Form.Label>Hourly Rate Max</Form.Label>
-									<Form.Input type="number" />
-									<Form.Validation />
-								</Form.Item>
-							</Form.Field>
-						</div>
-					</div>
-
-					<p class="text-sm text-muted-foreground">
-						Setting a rate range helps employers know your expectations. You can still negotiate
-						specific rates for each position.
-					</p>
-				</div>
-
 				<div class="flex justify-end pt-4">
 					<Button disabled={$submitting} class="bg-green-400 hover:bg-green-500" type="submit">
 						{#if $submitting}

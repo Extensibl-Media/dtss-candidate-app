@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { APP_NAME } from '$lib/config/constants';
 	import heroImg from '$lib/assets/hero-img.jpg';
@@ -8,10 +7,10 @@
 
 <svelte:head>
 	<title>Dental Staffing Solutions Made Simple | {APP_NAME}</title>
-	<meta
+	<!-- <meta
 		name="description"
 		content="Sveltekit Auth Starter - An open source auth starter project utilizing lucia-auth, skeleton ui, prisma and sveltekit."
-	/>
+	/> -->
 </svelte:head>
 
 <div class="flex-1">
