@@ -7,6 +7,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { PlusIcon } from 'lucide-svelte';
 	import { format, parse } from 'date-fns';
+	import { formatInTimeZone } from 'date-fns-tz';
+	import { getUserTimezone } from '$lib/_helpers/UTCTimezoneUtils.js';
 	export let data;
 	$: timesheets = data.timesheets;
 
@@ -48,12 +50,12 @@
 						<div class="flex flex-row gap-2 items-center">
 							<img alt="company logo" class="md:w-12 h-8 w-8 md:h-12" src={data.company.logo} />
 							<div>
-								<p class="">{data.requisition.title}</p>
+								<p class="">{data.requisition.disciplineName}</p>
 								<p class="text-xs text-gray-700">{data.company.name}</p>
 							</div>
 						</div>
 					</Table.Cell>
-					<Table.Cell>{format(data.timesheet.weekBeginDate, 'PP')}</Table.Cell>
+					<Table.Cell>{formatInTimeZone(data.timesheet.weekBeginDate, getUserTimezone(), 'PP')}</Table.Cell>
 					<Table.Cell>
 						<Badge
 							class={cn(

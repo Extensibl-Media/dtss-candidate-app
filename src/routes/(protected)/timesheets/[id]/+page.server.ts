@@ -4,6 +4,11 @@ import { PUBLIC_CLIENT_APP_DOMAIN } from '$env/static/public';
 import { generateToken } from '$lib/server/utils';
 import { setFlash } from 'sveltekit-flash-message/server';
 
+const formatTimeString = (timeStr: string) => {
+	if (!timeStr) return null;
+	return `${timeStr}:00`; // Convert HH:mm to HH:mm:ss
+};
+
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const timesheetId = params.id;
 	if (!timesheetId) {
@@ -109,6 +114,8 @@ export const actions = {
 					date,
 					startTime: value.startTime,
 					endTime: value.endTime,
+					lunchStartTime: value.lunchStartTime,
+					lunchEndTime: value.lunchEndTime,
 					hours: value.hours,
 					workdayId: value.workdayId || timesheetData.workday?.id || ''
 				}));
@@ -222,6 +229,8 @@ export const actions = {
 					date,
 					startTime: value.startTime,
 					endTime: value.endTime,
+					lunchStartTime: value.lunchStartTime,
+					lunchEndTime: value.lunchEndTime,
 					hours: value.hours,
 					workdayId: value.workdayId || timesheetData.workday?.id || ''
 				}));

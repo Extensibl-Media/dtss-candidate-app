@@ -45,6 +45,7 @@
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
+	import { toZonedTime } from 'date-fns-tz';
 
 	export let data: PageData;
 
@@ -53,7 +54,14 @@
 	let submitDialogOpen = false;
 	let isEditing = false;
 	let initialLoadDone = false;
+ let dataLoaded = false;
 
+  // ✅ Track when data is ready
+  $: {
+    if (requisition?.referenceTimezone && data.workdays) {
+      dataLoaded = true;
+    }
+  }
 	$: timesheet = data.timesheet;
 	$: requisition = data.requisition;
 	$: company = data.company;
@@ -61,7 +69,7 @@
 	$: workday = data.workday;
 
 	// ✅ Initialize time entries from existing timesheet or create empty ones
-	let timeEntries: Record<string, { startTime: string; endTime: string; hours: number }> = {};
+	let timeEntries: Record<string, { startTime: string; endTime: string; hours: number; lunchStartTime?: string; lunchEndTime?: string }> = {};
 
 	// ✅ Calculate week dates
 	$: weekBeginDate = parseISO(timesheet.weekBeginDate);
@@ -88,55 +96,171 @@
 
 	// ✅ Initialize entries for all scheduled workdays
 	$: {
-		if (scheduledWorkDays.length > 0 && !initialLoadDone) {
-			scheduledWorkDays.forEach(({ dateKey }) => {
-				if (!timeEntries[dateKey]) {
-					timeEntries[dateKey] = { startTime: '', endTime: '', hours: 0 };
-				}
-			});
-		}
-	}
+    if (scheduledWorkDays.length > 0 && !initialLoadDone) {
+      scheduledWorkDays.forEach(({ dateKey }) => {
+        if (!timeEntries[dateKey]) {
+          timeEntries[dateKey] = {
+            startTime: '',
+            endTime: '',
+            lunchStartTime: '',
+            lunchEndTime: '',
+            hours: 0
+          };
+        }
+      });
+    }
+  }
+
+	function hasLatestShiftEnded(): boolean {
+    // Wait for data to be loaded
+    if (!dataLoaded) {
+      console.log('Data not loaded yet');
+      return false; // Disable submit until data loads
+    }
+
+    console.log('=== Checking if latest shift ended ===');
+
+    if (!data.workdays || data.workdays.length === 0) {
+      console.log('No workdays data available');
+      return true;
+    }
+
+    if (!requisition?.referenceTimezone) {
+      console.log('No timezone found');
+      return true;
+    }
+
+    // Sort workdays by date to find the latest one
+    const sortedWorkdays = [...data.workdays].sort((a, b) => {
+      const dateA = new Date(a.recurrenceDay.date);
+      const dateB = new Date(b.recurrenceDay.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    const latestWorkday = sortedWorkdays[sortedWorkdays.length - 1];
+    console.log('Latest workday:', latestWorkday);
+
+    if (!latestWorkday?.recurrenceDay?.dayEnd) {
+      console.log('No dayEnd Time found for latest workday');
+      return true;
+    }
+
+    try {
+      // Get current time
+      const now = new Date();
+      console.log('Current time (UTC):', now.toISOString());
+
+      const nowInReqZone = toZonedTime(now, requisition.referenceTimezone);
+      console.log('Current time in requisition zone:', nowInReqZone.toISOString());
+
+      // Parse the shift end time
+      const shiftEndTime = new Date(latestWorkday.recurrenceDay.dayEnd);
+      console.log('Shift end time (UTC):', shiftEndTime.toISOString());
+      console.log('Shift date:', latestWorkday.recurrenceDay.date);
+
+      const shiftEndInReqZone = toZonedTime(shiftEndTime, requisition.referenceTimezone);
+      console.log('Shift end time in requisition zone:', shiftEndInReqZone.toISOString());
+
+      const hasEnded = nowInReqZone >= shiftEndInReqZone;
+      console.log('Has shift ended?', hasEnded);
+      console.log('=== End check ===');
+
+      return hasEnded;
+    } catch (error) {
+      console.error('Error checking shift end time:', error);
+      return true;
+    }
+  }
 
 	// ✅ Function to load time entries
 	function loadTimeEntries() {
-		// First, initialize all scheduled days with empty values
-		scheduledWorkDays.forEach(({ dateKey }) => {
-			timeEntries[dateKey] = { startTime: '', endTime: '', hours: 0 };
-		});
+    scheduledWorkDays.forEach(({ dateKey }) => {
+      timeEntries[dateKey] = {
+        startTime: '',
+        endTime: '',
+        lunchStartTime: '',
+        lunchEndTime: '',
+        hours: 0
+      };
+    });
 
-		// Then, load existing data
-		if (timesheet?.hoursRaw && Array.isArray(timesheet.hoursRaw) && timesheet.hoursRaw.length > 0) {
-			timesheet.hoursRaw.forEach((entry: any) => {
-				const dateKey = entry.date;
+    if (timesheet?.hoursRaw && Array.isArray(timesheet.hoursRaw) && timesheet.hoursRaw.length > 0) {
+      timesheet.hoursRaw.forEach((entry: any) => {
+        const dateKey = entry.date;
 
-				const startTime = entry.startTime
-					? new Date(entry.startTime).toLocaleTimeString('en-US', {
-							hour12: false,
-							hour: '2-digit',
-							minute: '2-digit'
-						})
-					: '';
+        const startTime = entry.startTime
+          ? new Date(entry.startTime).toLocaleTimeString('en-US', {
+              hour12: false,
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '';
 
-				const endTime = entry.endTime
-					? new Date(entry.endTime).toLocaleTimeString('en-US', {
-							hour12: false,
-							hour: '2-digit',
-							minute: '2-digit'
-						})
-					: '';
+        const endTime = entry.endTime
+          ? new Date(entry.endTime).toLocaleTimeString('en-US', {
+              hour12: false,
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '';
 
-				if (timeEntries[dateKey]) {
-					timeEntries[dateKey] = {
-						startTime,
-						endTime,
-						hours: entry.hours || 0
-					};
-				}
-			});
-		}
+        // ✅ Load lunch times if they exist
+        const lunchStartTime = entry.lunchStartTime
+          ? new Date(entry.lunchStartTime).toLocaleTimeString('en-US', {
+              hour12: false,
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '';
 
-		timeEntries = { ...timeEntries };
-	}
+        const lunchEndTime = entry.lunchEndTime
+          ? new Date(entry.lunchEndTime).toLocaleTimeString('en-US', {
+              hour12: false,
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '';
+
+        if (timeEntries[dateKey]) {
+          timeEntries[dateKey] = {
+            startTime,
+            endTime,
+            lunchStartTime,
+            lunchEndTime,
+            hours: entry.hours || 0  // This already has lunch deducted
+          };
+        }
+      });
+    }
+
+    timeEntries = { ...timeEntries };
+  }
+
+  function calculateLunchHours(lunchStart: string, lunchEnd: string): number {
+    if (!lunchStart || !lunchEnd) return 0;
+    const [startHour, startMin] = lunchStart.split(':').map(Number);
+    const [endHour, endMin] = lunchEnd.split(':').map(Number);
+    const hours = endHour - startHour + (endMin - startMin) / 60;
+    return Math.max(0, Math.round(hours * 100) / 100);
+  }
+
+  function calculateHours(
+    startTime: string,
+    endTime: string,
+    lunchStart: string = '',
+    lunchEnd: string = ''
+  ): number {
+    if (!startTime || !endTime) return 0;
+
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    const totalTime = endHour - startHour + (endMin - startMin) / 60;
+
+    const lunchHours = calculateLunchHours(lunchStart, lunchEnd);
+    const hoursWorked = totalTime - lunchHours;
+
+    return Math.round(hoursWorked * 100) / 100;
+  }
 
 	// ✅ Only load once on mount
 	onMount(() => {
@@ -149,6 +273,9 @@
 
 	// ✅ Check if form is valid
 	$: hasHoursEntered = Object.values(timeEntries).some((entry) => entry.hours > 0);
+	$: latestShiftEnded = dataLoaded ? hasLatestShiftEnded() : false;
+  $: canSubmit = hasHoursEntered && totalHours > 0 && latestShiftEnded;
+
 	$: isDraft = timesheet?.status === 'DRAFT';
 	$: isPending = timesheet?.status === 'PENDING';
 	$: isDiscrepancy = timesheet?.status === 'DISCREPANCY';
@@ -160,28 +287,45 @@
 	$: canEdit = isDraft || (isDiscrepancy && isEditing);
 	$: showEditButton = isDiscrepancy && !isEditing;
 
-	function calculateHours(startTime: string, endTime: string): number {
-		if (!startTime || !endTime) return 0;
-		const [startHour, startMin] = startTime.split(':').map(Number);
-		const [endHour, endMin] = endTime.split(':').map(Number);
-		const hours = endHour - startHour + (endMin - startMin) / 60;
-		return Math.round(hours * 100) / 100;
-	}
+	$: {
+    console.log('Data loaded:', dataLoaded);
+    console.log('Time entries:', timeEntries);
+    console.log('Total hours:', totalHours);
+    console.log('Has hours entered:', hasHoursEntered);
+    console.log('Latest shift ended:', latestShiftEnded);
+    console.log('Can submit:', canSubmit);
+    console.log('Workdays data:', data.workdays);
+    console.log('Requisition timezone:', requisition?.referenceTimezone);
+  }
 
-	function updateTimeEntry(dateKey: string, field: 'startTime' | 'endTime', value: string) {
-		if (!timeEntries[dateKey]) {
-			timeEntries[dateKey] = { startTime: '', endTime: '', hours: 0 };
-		}
+  function updateTimeEntry(
+    dateKey: string,
+    field: 'startTime' | 'endTime' | 'lunchStartTime' | 'lunchEndTime',
+    value: string
+  ) {
+    if (!timeEntries[dateKey]) {
+      timeEntries[dateKey] = {
+        startTime: '',
+        endTime: '',
+        lunchStartTime: '',
+        lunchEndTime: '',
+        hours: 0
+      };
+    }
 
-		timeEntries[dateKey][field] = value;
-		timeEntries[dateKey].hours = calculateHours(
-			timeEntries[dateKey].startTime,
-			timeEntries[dateKey].endTime
-		);
+    timeEntries[dateKey][field] = value;
 
-		// Force reactivity
-		timeEntries = { ...timeEntries };
-	}
+    // Calculate hours worked (excluding lunch)
+    timeEntries[dateKey].hours = calculateHours(
+      timeEntries[dateKey].startTime,
+      timeEntries[dateKey].endTime,
+      timeEntries[dateKey].lunchStartTime,
+      timeEntries[dateKey].lunchEndTime
+    );
+
+    // Force reactivity
+    timeEntries = { ...timeEntries };
+  }
 
 	function enableEditing() {
 		isEditing = true;
@@ -249,13 +393,6 @@
 
 	$: statusBadge = getTimesheetStatusBadge(timesheet?.status || 'DRAFT');
 
-	// ✅ Debug logging
-	$: {
-		console.log('Time entries:', timeEntries);
-		console.log('Total hours:', totalHours);
-		console.log('Has hours entered:', hasHoursEntered);
-		console.log('recurrence day',recurrenceDay)
-	}
 </script>
 
 <svelte:head>
@@ -324,22 +461,42 @@
 
 					<!-- Total Hours Summary -->
 					<div>
-						<h3 class="font-medium mb-3">Hours Summary</h3>
-						<div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
-							<div class="p-3 bg-gray-50 rounded-lg">
-								<p class="text-sm text-gray-600">Total Hours</p>
-								<p class="text-xl font-bold">{totalHours.toFixed(2)}</p>
-							</div>
-							<div class="p-3 bg-gray-50 rounded-lg">
-								<p class="text-sm text-gray-600">Regular Hours</p>
-								<p class="text-xl font-bold">{Math.min(totalHours, 40).toFixed(2)}</p>
-							</div>
-							<div class="p-3 bg-gray-50 rounded-lg">
-								<p class="text-sm text-gray-600">Overtime</p>
-								<p class="text-xl font-bold">{Math.max(0, totalHours - 40).toFixed(2)}</p>
-							</div>
-						</div>
-					</div>
+                        <h3 class="font-medium mb-3">Hours Summary</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-600">Total Hours</p>
+                                <p class="text-xl font-bold">{totalHours.toFixed(2)}</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-600">Regular Hours</p>
+                                <p class="text-xl font-bold">{Math.min(totalHours, 40).toFixed(2)}</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-600">Overtime</p>
+                                <p class="text-xl font-bold">{Math.max(0, totalHours - 40).toFixed(2)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {#if isDiscrepancy}
+                          <Separator />
+
+                          <Alert variant="destructive">
+                            <AlertTriangle class="h-4 w-4" />
+                            <AlertTitle>
+                              Timesheet Discrepancy
+                            </AlertTitle>
+                            <AlertDescription class="mt-2">
+                              <p class="text-sm font-medium mb-1">Reason:</p>
+                              <p class="text-sm whitespace-pre-wrap">{timesheet.discrepancyNote || "No notes provided"}</p>
+                              {#if isDiscrepancy}
+                                <p class="text-sm mt-2 font-medium">
+                                  Please correct your hours below and resubmit.
+                                </p>
+                              {/if}
+                            </AlertDescription>
+                          </Alert>
+                        {/if}
 				</CardContent>
 			</Card>
 
@@ -371,95 +528,153 @@
 				</CardHeader>
 
 				<CardContent>
-					{#if canEdit}
-						<!-- ✅ EDIT MODE: Editable time entries -->
-						{#if scheduledWorkDays.length > 0}
-							<div class="space-y-4">
-								<div
-									class="grid grid-cols-4 gap-2 items-center px-2 text-xs font-medium text-gray-500"
-								>
-									<span>Date</span>
-									<span>Start Time</span>
-									<span>End Time</span>
-									<span class="text-right">Hours</span>
-								</div>
+                {#if canEdit}
+                    <!-- ✅ EDIT MODE: Responsive layout -->
+                    {#if scheduledWorkDays.length > 0}
+                    <div class="space-y-4">
+                        {#each scheduledWorkDays as { dateKey, dayString }}
+                        {#if timeEntries[dateKey]}
+                            <div class="p-3 bg-gray-50 rounded-lg space-y-3">
+                            <!-- Date Header -->
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium">{dayString}</p>
+                                <p class="text-sm font-semibold text-blue-700">
+                                {timeEntries[dateKey]?.hours?.toFixed(2) || '0.00'} hrs
+                                </p>
+                            </div>
 
-								{#each scheduledWorkDays as { dateKey, dayString }}
-									{#if timeEntries[dateKey]}
-										<div class="grid grid-cols-4 gap-2 items-center p-3 bg-gray-50 rounded-lg">
-											<div class="text-sm font-medium">
-												{dayString}
-											</div>
-											<Input
-												type="time"
-												class="text-sm"
-												value={timeEntries[dateKey].startTime}
-												on:input={(e) => updateTimeEntry(dateKey, 'startTime', e.currentTarget.value)}
-											/>
-											<Input
-												type="time"
-												class="text-sm"
-												value={timeEntries[dateKey].endTime}
-												on:input={(e) => updateTimeEntry(dateKey, 'endTime', e.currentTarget.value)}
-											/>
-											<div class="text-right text-sm font-semibold">
-												{timeEntries[dateKey]?.hours?.toFixed(2) || '0.00'} hrs
-											</div>
-										</div>
-									{/if}
-								{/each}
+                            <!-- Work Hours Row -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                <Label for="{dateKey}-start" class="text-xs text-gray-600">Start Time</Label>
+                                <Input
+                                    id="{dateKey}-start"
+                                    type="time"
+                                    class="text-sm mt-1"
+                                    value={timeEntries[dateKey].startTime}
+                                    on:input={(e) => updateTimeEntry(dateKey, 'startTime', e.currentTarget.value)}
+                                />
+                                </div>
+                                <div>
+                                <Label for="{dateKey}-end" class="text-xs text-gray-600">End Time</Label>
+                                <Input
+                                    id="{dateKey}-end"
+                                    type="time"
+                                    class="text-sm mt-1"
+                                    value={timeEntries[dateKey].endTime}
+                                    on:input={(e) => updateTimeEntry(dateKey, 'endTime', e.currentTarget.value)}
+                                />
+                                </div>
+                            </div>
 
-								{#if isDiscrepancy && isEditing}
-									<div class="flex justify-end pt-2">
-										<Button variant="outline" size="sm" on:click={cancelEditing}>
-											Cancel Editing
-										</Button>
-									</div>
-								{/if}
-							</div>
-						{:else}
-							<div class="py-12 text-center text-muted-foreground">
-								<AlertCircle class="h-12 w-12 mx-auto mb-3" />
-								<p>No scheduled workdays found for this week</p>
-							</div>
-						{/if}
-					{:else}
-						<!-- ✅ VIEW MODE: Display submitted hours -->
-						{#if timesheet?.hoursRaw && timesheet.hoursRaw.length > 0}
-							<div class="divide-y">
-								{#each timesheet.hoursRaw as entry}
-									<div class="py-3 flex items-center justify-between">
-										<div>
-											<p class="font-medium">{formatFullDate(entry.date)}</p>
-											<p class="text-sm text-muted-foreground">
-												{safeFormatDate(entry.startTime)} - {safeFormatDate(entry.endTime)}
-											</p>
-										</div>
-										<div class="text-right">
-											<p class="text-lg font-semibold">{entry.hours} hrs</p>
-										</div>
-									</div>
-								{/each}
-							</div>
-						{:else}
-							<div class="py-12 text-center text-muted-foreground">
-								<Clipboard class="h-12 w-12 mx-auto mb-3" />
-								<p>No hours recorded for this timesheet</p>
-							</div>
-						{/if}
-					{/if}
-				</CardContent>
+                            <!-- Lunch Hours Row (Optional) -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                <Label for="{dateKey}-lunch-start" class="text-xs text-gray-600">
+                                    Lunch Start <span class="text-gray-400">(Optional)</span>
+                                </Label>
+                                <Input
+                                    id="{dateKey}-lunch-start"
+                                    type="time"
+                                    class="text-sm mt-1"
+                                    placeholder="Optional"
+                                    value={timeEntries[dateKey].lunchStartTime}
+                                    on:input={(e) => updateTimeEntry(dateKey, 'lunchStartTime', e.currentTarget.value)}
+                                />
+                                </div>
+                                <div>
+                                <Label for="{dateKey}-lunch-end" class="text-xs text-gray-600">
+                                    Lunch End <span class="text-gray-400">(Optional)</span>
+                                </Label>
+                                <Input
+                                    id="{dateKey}-lunch-end"
+                                    type="time"
+                                    class="text-sm mt-1"
+                                    placeholder="Optional"
+                                    value={timeEntries[dateKey].lunchEndTime}
+                                    on:input={(e) => updateTimeEntry(dateKey, 'lunchEndTime', e.currentTarget.value)}
+                                />
+                                </div>
+                            </div>
+
+                            <!-- Show lunch duration if entered -->
+                            {#if timeEntries[dateKey].lunchStartTime && timeEntries[dateKey].lunchEndTime}
+                                {@const lunchDuration = calculateLunchHours(
+                                timeEntries[dateKey].lunchStartTime,
+                                timeEntries[dateKey].lunchEndTime
+                                )}
+                                <div class="text-xs text-gray-600 flex items-center gap-1">
+                                <span>🍽️</span>
+                                <span>Lunch break: {lunchDuration.toFixed(2)} hrs (unpaid)</span>
+                                </div>
+                            {/if}
+                            </div>
+                        {/if}
+                        {/each}
+
+                        {#if isDiscrepancy && isEditing}
+                        <div class="flex justify-end pt-2">
+                            <Button variant="outline" size="sm" on:click={cancelEditing}>
+                            Cancel Editing
+                            </Button>
+                        </div>
+                        {/if}
+                    </div>
+
+                    <!-- ✅ Helper text -->
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800 flex gap-2">
+                        <Info class="h-4 w-4 flex-shrink-0 mt-0.5" />
+                        <p>
+                        <strong>Lunch breaks are optional.</strong> If you took a lunch break, enter the start and end times.
+                        Your hours will automatically exclude the lunch duration.
+                        </p>
+                    </div>
+                    {:else}
+                    <div class="py-12 text-center text-muted-foreground">
+                        <AlertCircle class="h-12 w-12 mx-auto mb-3" />
+                        <p>No scheduled workdays found for this week</p>
+                    </div>
+                    {/if}
+                {:else}
+                    <!-- ✅ VIEW MODE: Already responsive -->
+                    {#if timesheet?.hoursRaw && timesheet.hoursRaw.length > 0}
+                    <div class="divide-y">
+                        {#each timesheet.hoursRaw as entry}
+                        <div class="py-3">
+                            <div class="flex items-center justify-between mb-1">
+                            <p class="font-medium">{formatFullDate(entry.date)}</p>
+                            <p class="text-lg font-semibold">{entry.hours} hrs</p>
+                            </div>
+                            <div class="text-sm text-muted-foreground space-y-1">
+                            <p>Work: {safeFormatDate(entry.startTime)} - {safeFormatDate(entry.endTime)}</p>
+                            {#if entry.lunchStartTime && entry.lunchEndTime}
+                                <p class="flex items-center gap-1">
+                                <span class="text-xs">🍽️</span>
+                                Lunch: {safeFormatDate(entry.lunchStartTime)} - {safeFormatDate(entry.lunchEndTime)}
+                                </p>
+                            {/if}
+                            </div>
+                        </div>
+                        {/each}
+                    </div>
+                    {:else}
+                    <div class="py-12 text-center text-muted-foreground">
+                        <Clipboard class="h-12 w-12 mx-auto mb-3" />
+                        <p>No hours recorded for this timesheet</p>
+                    </div>
+                    {/if}
+                {/if}
+                </CardContent>
 			</Card>
 
 			<!-- Shift Details -->
-			<Card>
+			<!-- <Card>
 				<CardHeader>
 					<CardTitle>Shift Information</CardTitle>
 					<CardDescription>Details about the work assignment</CardDescription>
 				</CardHeader>
 
 				<CardContent class="space-y-4">
-					<!-- Date and Time -->
 					<div class="flex items-start gap-4">
 						<div class="bg-blue-100 rounded-full p-2.5">
 							<CalendarDays class="h-5 w-5 text-blue-700" />
@@ -484,7 +699,6 @@
 						</div>
 					</div>
 
-					<!-- Job Description -->
 					{#if requisition?.jobDescription}
 						<div class="flex items-start gap-4">
 							<div class="bg-blue-100 rounded-full p-2.5">
@@ -499,7 +713,6 @@
 						</div>
 					{/if}
 
-					<!-- Special Instructions -->
 					{#if requisition?.specialInstructions}
 						<Alert>
 							<Info class="h-4 w-4" />
@@ -510,7 +723,7 @@
 						</Alert>
 					{/if}
 				</CardContent>
-			</Card>
+			</Card> -->
 		</div>
 
 		<!-- Sidebar -->
@@ -573,7 +786,7 @@
 								<AlertDialog.Trigger asChild>
 									<Button
 										on:click={() => (submitDialogOpen = true)}
-										disabled={!hasHoursEntered || totalHours === 0}
+										disabled={!canSubmit}
 										class="w-full gap-2 bg-blue-700 hover:bg-blue-800"
 									>
 										<Save class="h-4 w-4" />
@@ -606,6 +819,12 @@
 									</AlertDialog.Footer>
 								</AlertDialog.Content>
 							</AlertDialog.Root>
+    					    {#if hasHoursEntered && totalHours > 0 && !latestShiftEnded}
+                                <p class="text-sm text-amber-600 mt-2">
+                                <AlertCircle class="h-4 w-4 inline mr-1" />
+                                You can submit this timesheet after your last shift of the week has ended.
+                                </p>
+                            {/if}
 						{/if}
 
 						<!-- ✅ RESUBMIT BUTTON (for DISCREPANCY after editing) -->
@@ -614,7 +833,7 @@
 								<AlertDialog.Trigger asChild>
 									<Button
 										on:click={() => (verifyDialogOpen = true)}
-										disabled={!isEditing || !hasHoursEntered || totalHours === 0}
+										disabled={!isEditing || !canSubmit}
 										class="w-full gap-2 bg-green-600 hover:bg-green-700"
 									>
 										<CheckCircle2 class="h-4 w-4" />
@@ -650,6 +869,12 @@
 									</AlertDialog.Footer>
 								</AlertDialog.Content>
 							</AlertDialog.Root>
+        				    {#if isEditing && hasHoursEntered && totalHours > 0 && !latestShiftEnded}
+                                <p class="text-sm text-amber-600 mt-2">
+                                <AlertCircle class="h-4 w-4 inline mr-1" />
+                                You can resubmit this timesheet after your last shift of the week has ended.
+                                </p>
+                            {/if}
 						{/if}
 
 						<!-- ✅ CANCEL BUTTON (for DRAFT or PENDING) -->
