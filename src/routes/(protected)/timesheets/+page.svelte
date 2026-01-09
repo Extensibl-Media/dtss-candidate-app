@@ -1,25 +1,15 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table';
-	import { faker } from '@faker-js/faker';
 	import { cn } from '$lib/utils';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
 	import { goto } from '$app/navigation';
-	import { Button } from '$lib/components/ui/button';
-	import { PlusIcon } from 'lucide-svelte';
-	import { format, parse } from 'date-fns';
 	import { formatInTimeZone } from 'date-fns-tz';
 	import { getUserTimezone } from '$lib/_helpers/UTCTimezoneUtils.js';
+
 	export let data;
+
 	$: timesheets = data.timesheets;
 
-	const statusColor = (status: string) => {
-		switch (status) {
-			case 'DUE':
-				return 'bg-red-400 text-red-50 hover:bg-red-400';
-		}
-	};
-
-	$: console.log('timesheets', timesheets);
 </script>
 
 <svelte:head>
