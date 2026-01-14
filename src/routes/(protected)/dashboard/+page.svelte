@@ -2,32 +2,22 @@
 	import {
 		Card,
 		CardContent,
-		CardDescription,
 		CardFooter,
 		CardHeader,
 		CardTitle
 	} from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Progress } from '$lib/components/ui/progress';
 	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs';
-	import { Separator } from '$lib/components/ui/separator';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar';
 	import {
 		CalendarDays,
 		Briefcase,
 		Clock,
 		Clipboard,
-		MessageSquare,
-		CheckCircle2,
-		AlertCircle,
 		ChevronRight,
-		Users,
 		CalendarClock,
-		DollarSign,
 		FileText,
 		Calendar,
-		CalendarCheck,
 		CalendarSearch,
 		Building,
 		CircleDollarSign,
@@ -41,6 +31,8 @@
 	import type { SuperValidated } from 'sveltekit-superforms';
 	import type { RecurrenceDayClaimSchema } from '$lib/config/zod-schemas';
 	import { superForm } from 'sveltekit-superforms/client';
+	import { getUserTimezone } from '$lib/_helpers/UTCTimezoneUtils';
+	import { formatInTimeZone } from 'date-fns-tz';
 
 	// Mock data - replace with your actual data
 	export let data: PageData;
@@ -51,15 +43,6 @@
 	$: workdays = data.workdays;
 	$: timesheets = data.timesheets;
 	$: requisitions = data.requisitions;
-
-	// Helper function to format date
-	// function formatDate(dateString) {
-	// 	const date = new Date(dateString);
-	// 	return new Intl.DateTimeFormat('en-US', {
-	// 		month: 'short',
-	// 		day: 'numeric'
-	// 	}).format(date);
-	// }
 
 	// Get status badge variant
 	function getStatusBadge(status) {
@@ -203,7 +186,7 @@
 												</p>
 												<div class="flex items-center gap-2 text-sm">
 													<CalendarDays class="h-3.5 w-3.5 text-muted-foreground" />
-													<span>{format(shift.recurrenceDay.date, 'PP')}</span>
+													<span>{formatInTimeZone(shift.recurrenceDay.date, getUserTimezone(), 'PP')}</span>
 													<Clock class="h-3.5 w-3.5 ml-2 text-muted-foreground" />
 													<span>{format(shift.recurrenceDay.dayStart, 'p')} - {format(shift.recurrenceDay.dayEnd, 'p')}</span>
 												</div>
@@ -242,11 +225,11 @@
 											class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
 										>
 											<div class="space-y-1">
-												<div class="font-medium">{timesheet.requisition.title}</div>
+												<div class="font-medium">{timesheet.requisition.disciplineName}</div>
 												<p class="text-sm text-muted-foreground">{timesheet.company.name}</p>
 												<div class="flex items-center gap-2 text-sm">
 													<CalendarDays class="h-3.5 w-3.5 text-muted-foreground" />
-													<span>{format(timesheet.timesheet.createdAt, 'PP')}</span>
+													<span>{formatInTimeZone(timesheet.timesheet.weekBeginDate, getUserTimezone(), 'PP')}</span>
 													<Clock class="h-3.5 w-3.5 ml-2 text-muted-foreground" />
 													<span>{timesheet.timesheet.totalHoursWorked} hours</span>
 												</div>

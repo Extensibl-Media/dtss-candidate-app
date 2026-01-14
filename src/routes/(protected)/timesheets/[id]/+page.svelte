@@ -68,6 +68,7 @@
 	$: recurrenceDay = data.recurrenceDay;
 	$: workday = data.workday;
 
+	$: console.log(requisition)
 	// ✅ Initialize time entries from existing timesheet or create empty ones
 	let timeEntries: Record<string, { startTime: string; endTime: string; hours: number; lunchStartTime?: string; lunchEndTime?: string }> = {};
 
@@ -114,19 +115,15 @@
 	function hasLatestShiftEnded(): boolean {
     // Wait for data to be loaded
     if (!dataLoaded) {
-      console.log('Data not loaded yet');
       return false; // Disable submit until data loads
     }
 
-    console.log('=== Checking if latest shift ended ===');
 
     if (!data.workdays || data.workdays.length === 0) {
-      console.log('No workdays data available');
       return true;
     }
 
     if (!requisition?.referenceTimezone) {
-      console.log('No timezone found');
       return true;
     }
 
@@ -138,10 +135,8 @@
     });
 
     const latestWorkday = sortedWorkdays[sortedWorkdays.length - 1];
-    console.log('Latest workday:', latestWorkday);
 
     if (!latestWorkday?.recurrenceDay?.dayEnd) {
-      console.log('No dayEnd Time found for latest workday');
       return true;
     }
 
@@ -272,31 +267,20 @@
 	$: totalHours = Object.values(timeEntries).reduce((sum, entry) => sum + (entry.hours || 0), 0);
 
 	// ✅ Check if form is valid
-	$: hasHoursEntered = Object.values(timeEntries).some((entry) => entry.hours > 0);
-	$: latestShiftEnded = dataLoaded ? hasLatestShiftEnded() : false;
+  $: hasHoursEntered = Object.values(timeEntries).some((entry) => entry.hours > 0);
+  $: latestShiftEnded = dataLoaded ? hasLatestShiftEnded() : false;
   $: canSubmit = hasHoursEntered && totalHours > 0 && latestShiftEnded;
 
-	$: isDraft = timesheet?.status === 'DRAFT';
-	$: isPending = timesheet?.status === 'PENDING';
-	$: isDiscrepancy = timesheet?.status === 'DISCREPANCY';
-	$: isApproved = timesheet?.status === 'APPROVED';
-	$: isVoid = timesheet?.status === 'VOID';
-	$: isRejected = timesheet?.status === 'REJECTED';
+  $: isDraft = timesheet?.status === 'DRAFT';
+  $: isPending = timesheet?.status === 'PENDING';
+  $: isDiscrepancy = timesheet?.status === 'DISCREPANCY';
+  $: isApproved = timesheet?.status === 'APPROVED';
+  $: isVoid = timesheet?.status === 'VOID';
+  $: isRejected = timesheet?.status === 'REJECTED';
 
-	// ✅ Can edit if DRAFT or DISCREPANCY (when editing mode is on)
-	$: canEdit = isDraft || (isDiscrepancy && isEditing);
-	$: showEditButton = isDiscrepancy && !isEditing;
-
-	$: {
-    console.log('Data loaded:', dataLoaded);
-    console.log('Time entries:', timeEntries);
-    console.log('Total hours:', totalHours);
-    console.log('Has hours entered:', hasHoursEntered);
-    console.log('Latest shift ended:', latestShiftEnded);
-    console.log('Can submit:', canSubmit);
-    console.log('Workdays data:', data.workdays);
-    console.log('Requisition timezone:', requisition?.referenceTimezone);
-  }
+  // ✅ Can edit if DRAFT or DISCREPANCY (when editing mode is on)
+  $: canEdit = isDraft || (isDiscrepancy && isEditing);
+  $: showEditButton = isDiscrepancy && !isEditing;
 
   function updateTimeEntry(
     dateKey: string,
@@ -392,7 +376,6 @@
 	}
 
 	$: statusBadge = getTimesheetStatusBadge(timesheet?.status || 'DRAFT');
-
 </script>
 
 <svelte:head>
@@ -442,7 +425,7 @@
 			<!-- Company and Position Info -->
 			<Card>
 				<CardHeader>
-					<CardTitle>{requisition?.title || 'Work Assignment'}</CardTitle>
+					<CardTitle>{requisition?.disciplineName || 'Work Assignment'}</CardTitle>
 					<CardDescription>{company?.name || 'Company'}</CardDescription>
 				</CardHeader>
 				<CardContent class="space-y-6">
